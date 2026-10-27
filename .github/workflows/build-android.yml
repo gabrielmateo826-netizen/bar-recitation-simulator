@@ -18,11 +18,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android Software Development Kit (SDK)
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android Native Development Kit (NDK)
-        run: sdkmanager "ndk;26.1.10909125"
+      - name: Accept Licenses & Configure Android NDK
+        run: |
+          yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
+          echo "ANDROID_HOME=${ANDROID_HOME}" >> $GITHUB_ENV
+          echo "NDK_HOME=${ANDROID_HOME}/ndk/26.1.10909125" >> $GITHUB_ENV
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -30,7 +31,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Setup Rust
+      - name: Setup Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android, armv7-linux-androideabi
@@ -38,16 +39,18 @@ jobs:
       - name: Install Frontend Dependencies
         run: npm install
 
-      - name: Initialize Tauri Android (if needed)
-        run: npm run tauri android init
+      - name: Initialize Tauri Android Harness
+        run: |
+          if [ ! -d "src-tauri/gen/android" ]; then
+            npm run tauri android init
+          fi
 
-      - name: Build Android APK
-        run: npm run tauri android build -- --apk
-        env:
-          NDK_HOME: ${{ steps.setup-android.outputs.sdk-path }}/ndk/26.1.10909125
+      - name: Build Android APK (ARM64)
+        run: npm run tauri android build -- --apk --target aarch64-linux-android
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
           name: BarRecitationSimulator-Android-APK
-          path: src-tauri/gen/android/app/build/outputs/apk/release/*.apk
+          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
