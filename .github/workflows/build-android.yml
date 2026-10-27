@@ -45,8 +45,8 @@ jobs:
             npm run tauri android init
           fi
 
-      - name: Build Android APK (ARM64)
-        run: npm run tauri android build -- --apk --target aarch64-linux-android
+- name: Build Android APK (ARM64)
+        run: npm run tauri android build -- --apk --target aarch64
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
