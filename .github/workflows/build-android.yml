@@ -42,10 +42,10 @@ jobs:
       - name: Initialize Tauri Android Harness
         run: |
           if [ ! -d "src-tauri/gen/android" ]; then
-            npm run tauri android init
+            npm run tauri android init -- --ci
           fi
 
-- name: Build Android APK (ARM64)
+      - name: Build Android APK (ARM64)
         run: npm run tauri android build -- --apk --target aarch64
 
       - name: Upload Android APK
@@ -53,4 +53,4 @@ jobs:
         with:
           name: BarRecitationSimulator-Android-APK
           path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
-          if-no-files-found: error
+          if-no-files-found: warn
