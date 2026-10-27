@@ -1,0 +1,53 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java Development Kit (JDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android Software Development Kit (SDK)
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android Native Development Kit (NDK)
+        run: sdkmanager "ndk;26.1.10909125"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi
+
+      - name: Install Frontend Dependencies
+        run: npm install
+
+      - name: Initialize Tauri Android (if needed)
+        run: npm run tauri android init
+
+      - name: Build Android APK
+        run: npm run tauri android build -- --apk
+        env:
+          NDK_HOME: ${{ steps.setup-android.outputs.sdk-path }}/ndk/26.1.10909125
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BarRecitationSimulator-Android-APK
+          path: src-tauri/gen/android/app/build/outputs/apk/release/*.apk
