@@ -325,7 +325,7 @@
   </div>
 
   <!-- BATCH COMPILATION OVERLAY MODAL -->
-  <div id="compileModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+  <div id="compileModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[75] hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-emerald-700/60 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2.5">
@@ -4173,6 +4173,8 @@ TASK: Grade the student's recitation strictly on the specific dimension asked in
       });
 
       await requestScreenWakeLock();
+      // Hide setup modal so compiler progress takes full view
+      document.getElementById('setupModal')?.classList.add('hidden');
       showCompileModal(calibratedItems.length);
       const compiledCards = [];
       const total = calibratedItems.length;
@@ -4283,6 +4285,8 @@ TASK: Grade the student's recitation strictly on the specific dimension asked in
       await stampSubjectModifiedTimestamp();
       await renderDeckListUI();
       alert(`Success! Deck "${deckObj.title}" (${compiledCards.length} cards) saved to your Master Library.`);
+      // Re-open setup modal to reveal the newly compiled deck in the library
+      document.getElementById('setupModal')?.classList.remove('hidden');
     }
 
     // ---------------------------------------------------------------------------
