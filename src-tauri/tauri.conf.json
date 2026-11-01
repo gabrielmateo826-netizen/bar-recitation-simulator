@@ -1,18 +1,19 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
+  "$schema": null,
   "productName": "bar-simulator",
   "version": "0.1.0",
   "identifier": "com.user.bar-simulator",
   "build": {
-"frontendDist": "https://gabrielmateo826-netizen.github.io/bar-recitation-simulator/"
+    "frontendDist": "../src"
   },
   "app": {
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "bar-simulator",
-        "width": 800,
-        "height": 600
+        "title": "Bar Recitation Simulator",
+        "url": "index.html",
+        "width": 1280,
+        "height": 800
       }
     ],
     "security": {
