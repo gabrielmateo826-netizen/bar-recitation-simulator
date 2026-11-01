@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.user.bar-simulator",
   "build": {
-    "frontendDist": "../src"
+"frontendDist": "https://gabrielmateo826-netizen.github.io/bar-recitation-simulator/"
   },
   "app": {
     "withGlobalTauri": true,
