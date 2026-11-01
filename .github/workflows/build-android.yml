@@ -45,18 +45,12 @@ jobs:
             npm run tauri android init -- --ci
           fi
 
-      - name: Build Android APK (ARM64)
-        run: npm run tauri android build -- --apk --target aarch64
-
-- name: Build Android Debug APK
-        run: npm run tauri android build -- --apk --target aarch64 --debug
-
-- name: Build Android Debug APK
+      - name: Build Android Debug APK
         run: npm run tauri android build -- --apk --target aarch64 --debug
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
           name: BarRecitationSimulator-Android-APK
-          path: src-tauri/gen/android/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
