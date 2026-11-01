@@ -5372,19 +5372,20 @@ function extractCardParagraphsForExport(c) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+
     // =========================================================================
     // EXPORT HANDLERS FOR JSON, MARKDOWN, AND WORD (.DOC)
     // =========================================================================
 
-// Auto-detect cards regardless of what variable your code uses
-function getActiveCards() {
+    // Automatically retrieves active cards from state pools or local storage
+    function getActiveCards() {
+      if (state.activeDeckCardsPool && state.activeDeckCardsPool.length) return state.activeDeckCardsPool;
+      if (state.activeAgenda && state.activeAgenda.length) return state.activeAgenda;
+      if (state.allUnbundledPool && state.allUnbundledPool.length) return state.allUnbundledPool;
       if (typeof currentDeckCards !== 'undefined' && currentDeckCards?.length) return currentDeckCards;
       if (typeof allCards !== 'undefined' && allCards?.length) return allCards;
       if (typeof cards !== 'undefined' && cards?.length) return cards;
-      if (typeof deck !== 'undefined' && deck?.length) return deck;
-      if (typeof flashcards !== 'undefined' && flashcards?.length) return flashcards;
       
-      // Fallback: check browser storage
       const stored = localStorage.getItem('bar_recitation_cards') || localStorage.getItem('cards') || localStorage.getItem('deck');
       if (stored) {
         try { return JSON.parse(stored); } catch (e) {}
@@ -5392,11 +5393,11 @@ function getActiveCards() {
       return [];
     }
 
-    // Universal single-click triggers
+    // Universal single-click trigger for floating toolbar
     function exportDeck(format) {
       const activeCards = getActiveCards();
       if (!activeCards || activeCards.length === 0) {
-        alert("No flashcards found to export. Create or load a deck first.");
+        alert("No flashcards found to export. Launch or pre-compile a deck first.");
         return;
       }
       if (format === 'json') exportCardsAsJSON(activeCards);
@@ -5404,7 +5405,7 @@ function getActiveCards() {
       if (format === 'doc') exportCardsAsDoc(activeCards);
     }
 
-    // 1. Export as JSON (Full database backup / transferable deck)
+    // 1. Export as JSON
     async function exportCardsAsJSON(cardsArray) {
       if (!cardsArray || cardsArray.length === 0) {
         alert("No flashcards found to export.");
@@ -5420,7 +5421,7 @@ function getActiveCards() {
       );
     }
 
-    // 2. Export as Markdown (For Obsidian, Notion, or text editors)
+    // 2. Export as Markdown (using native syllabus formatters)
     async function exportCardsAsMarkdown(cardsArray) {
       if (!cardsArray || cardsArray.length === 0) {
         alert("No flashcards found to export.");
@@ -5428,10 +5429,25 @@ function getActiveCards() {
       }
       let md = `# Philippine Bar Recitation Deck\n*Generated on: ${new Date().toLocaleDateString()}*\n\n---\n\n`;
       cardsArray.forEach((card, index) => {
-        md += `### Card ${index + 1}: ${card.topic || card.title || 'Bar Review Topic'}\n\n`;
-        md += `**Question / Recitation Prompt:**\n${card.question || card.front || ''}\n\n`;
-        md += `**Expected Answer / Doctrine:**\n${card.answer || card.back || ''}\n\n`;
-        if (card.citation) md += `*Legal Basis / Citation:* \`${card.citation}\`\n\n`;
+        const qNum = index + 1;
+        const header = typeof formatExportQuestionHeader === 'function' 
+          ? formatExportQuestionHeader(card, qNum) 
+          : `Question ${qNum}: ${card.topic || card.title || 'Bar Review Topic'}`;
+        const question = card.question_text || card.question || card.front || '';
+        
+        md += `**${header}**\n\n`;
+        if (question) md += `**${question}**\n\n`;
+
+        if (typeof extractCardParagraphsForExport === 'function') {
+          const paras = extractCardParagraphsForExport(card);
+          if (paras && paras.length) {
+            md += paras.join('\n\n') + '\n\n';
+          }
+        } else {
+          const ans = card.answer || card.back || '';
+          if (ans) md += `${ans}\n\n`;
+          if (card.citation) md += `*Legal Basis / Citation:* \`${card.citation}\`\n\n`;
+        }
         md += `---\n\n`;
       });
 
@@ -5452,12 +5468,27 @@ function getActiveCards() {
       }
       let bodyHtml = `<h2>Philippine Bar Recitation Deck</h2><p><em>Exported: ${new Date().toLocaleDateString()}</em></p><hr/>`;
       cardsArray.forEach((card, index) => {
+        const qNum = index + 1;
+        const header = typeof formatExportQuestionHeader === 'function' 
+          ? formatExportQuestionHeader(card, qNum) 
+          : `Question ${qNum}: ${card.topic || card.title || 'Bar Review Topic'}`;
+        const question = card.question_text || card.question || card.front || '';
+        let answersHtml = '';
+
+        if (typeof extractCardParagraphsForExport === 'function') {
+          const paras = extractCardParagraphsForExport(card);
+          answersHtml = paras.map(p => `<p style="margin-top: 6px; margin-bottom: 6px; text-align: justify;">${escapeHtml(p)}</p>`).join('');
+        } else {
+          const ans = card.answer || card.back || '';
+          answersHtml = `<p style="margin-top: 6px; margin-bottom: 6px;">${escapeHtml(ans)}</p>`;
+        }
+
         bodyHtml += `
           <div style="margin-bottom: 20px; padding: 12px; border: 1px solid #ccc; background-color: #f9f9f9;">
-            <h3 style="color: #1e3a8a; margin-top: 0;">Card ${index + 1}: ${card.topic || card.title || 'Bar Review Topic'}</h3>
-            <p><strong>Prompt:</strong> ${card.question || card.front || ''}</p>
-            <p><strong>Doctrine / Provision:</strong> ${card.answer || card.back || ''}</p>
-            ${card.citation ? `<p style="font-size: 11pt; color: #555;"><strong>Citation:</strong> ${card.citation}</p>` : ''}
+            <h3 style="color: #1e3a8a; margin-top: 0; margin-bottom: 8px;">${escapeHtml(header)}</h3>
+            ${question ? `<p style="font-weight: bold; margin-bottom: 8px;">${escapeHtml(question)}</p>` : ''}
+            ${answersHtml}
+            ${card.citation ? `<p style="font-size: 10pt; color: #555; margin-top: 6px;"><strong>Citation:</strong> ${escapeHtml(card.citation)}</p>` : ''}
           </div>
         `;
       });
@@ -5481,13 +5512,6 @@ function getActiveCards() {
         '.doc'
       );
     }
-    await exportWithSaveDialog(
-        docWrapper,
-        'Bar_Recitation_Reviewer.doc',
-        'application/msword',
-        'Microsoft Word Document',
-        '.doc'
-      );
   </script>
 
   <!-- Fixed Floating Export Toolbar -->
