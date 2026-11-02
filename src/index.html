@@ -1275,9 +1275,59 @@
       "130:53": { title: "Opinion of ordinary witnesses", text: "Section 53. Opinion of ordinary witnesses. — The opinion of a witness, for which proper basis is given, may be received in evidence regarding — (a) the identity of a person about whom he or she has adequate knowledge; (b) a handwriting with which he or she has sufficient familiarity; and (c) the mental sanity of a person with whom he or she is sufficiently acquainted. The witness may also testify on his or her impressions of the emotion, behavior, condition or appearance of a person. (50a)" },
       "130:54": { title: "Character evidence not generally admissible; exceptions", text: "Section 54. Character evidence not generally admissible; exceptions. — Evidence of a person's character or a trait of character is not admissible for the purpose of proving action in conformity therewith on a particular occasion, except:\n(a) In Criminal Cases: (1) The character of the offended party may be proved if it tends to establish in any reasonable degree the probability or improbability of the offense charged. (2) The accused may prove his or her good moral character, pertinent to the moral trait involved in the offense charged. However, the prosecution may not prove his or her bad moral character unless on rebuttal.\n(b) In Civil Cases: Evidence of the moral character of a party in a civil case is admissible only when pertinent to the issue of character involved in the case.\n(c) In Criminal and Civil Cases: Evidence of the good character of a witness is not admissible until such character has been impeached. (51a)" }
     };
+// ---------------------------------------------------------------------------
+    // SPECIAL RULES & ADMINISTRATIVE CIRCULARS TOPIC REGISTRY
+    // ---------------------------------------------------------------------------
+    const SPECIAL_RULES_TOPIC_REGISTRY = {
+      "dna": [
+        { topic: "Rule on DNA Evidence: Definition of DNA, DNA Profile, and DNA Testing (Sec. 3)", rule: "A.M. No. 06-11-5-SC, Sec. 3" },
+        { topic: "Rule on DNA Evidence: Application & Order for DNA Testing (Requisites & Discretion) (Sec. 4)", rule: "A.M. No. 06-11-5-SC, Sec. 4" },
+        { topic: "Rule on DNA Evidence: Factors in Granting DNA Testing Order (Sec. 4-5)", rule: "A.M. No. 06-11-5-SC, Sec. 4-5" },
+        { topic: "Rule on DNA Evidence: Post-Conviction DNA Testing (Requisites & Procedure) (Sec. 6)", rule: "A.M. No. 06-11-5-SC, Sec. 6" },
+        { topic: "Rule on DNA Evidence: Assessment and Evaluation of DNA Results (Weight & Integrity) (Sec. 7-8)", rule: "A.M. No. 06-11-5-SC, Sec. 7-8" },
+        { topic: "Rule on DNA Evidence: Post-Trial / Post-Conviction Relief based on Favorable DNA Result (Sec. 10)", rule: "A.M. No. 06-11-5-SC, Sec. 10" },
+        { topic: "Rule on DNA Evidence: Confidentiality of DNA Profiles & Penalties (Sec. 11)", rule: "A.M. No. 06-11-5-SC, Sec. 11" }
+      ],
+      "child witness": [
+        { topic: "Examination of Child Witness: Presumption of Competency & Competency Hearing (Sec. 6)", rule: "A.M. No. 004-07-SC, Sec. 6" },
+        { topic: "Examination of Child Witness: Oath or Affirmation & Examination Mode (Sec. 7-8)", rule: "A.M. No. 004-07-SC, Sec. 7-8" },
+        { topic: "Examination of Child Witness: Leading Questions, Impairment & Objections (Sec. 19-20)", rule: "A.M. No. 004-07-SC, Sec. 19-20" },
+        { topic: "Examination of Child Witness: Live-Link Television / Screens & Video Testimony (Sec. 25)", rule: "A.M. No. 004-07-SC, Sec. 25" },
+        { topic: "Examination of Child Witness: Hearsay Exception in Child Abuse Cases (Requisites) (Sec. 28)", rule: "A.M. No. 004-07-SC, Sec. 28" },
+        { topic: "Examination of Child Witness: Support Persons and Waiting Room Safeguards (Sec. 5 & 23)", rule: "A.M. No. 004-07-SC, Sec. 5" },
+        { topic: "Examination of Child Witness: Sexual Abuse Shield Rule & Corroboration (Sec. 22 & 30)", rule: "A.M. No. 004-07-SC, Sec. 22" }
+      ],
+      "electronic evidence": [
+        { topic: "Rule on Electronic Evidence: Definition of Electronic Document & Data Message (Rule 2)", rule: "A.M. No. 01-7-01-SC, Rule 2" },
+        { topic: "Rule on Electronic Evidence: Admissibility and Burden of Proving Authenticity (Rule 3)", rule: "A.M. No. 01-7-01-SC, Rule 3" },
+        { topic: "Rule on Electronic Evidence: Electronic Signature & Secure Electronic Signature (Rule 5)", rule: "A.M. No. 01-7-01-SC, Rule 5" },
+        { topic: "Rule on Electronic Evidence: Audio, Photographic, Video and Ephemeral Evidence (Rule 11)", rule: "A.M. No. 01-7-01-SC, Rule 11" },
+        { topic: "Rule on Electronic Evidence: Electronic Documents as Functional Equivalent of Original (Rule 4)", rule: "A.M. No. 01-7-01-SC, Rule 4" }
+      ],
+      "body-worn": [
+        { topic: "Rules on Body-Worn Cameras: Mandatory Use in Execution of Search & Arrest Warrants", rule: "A.M. No. 21-06-08-SC" },
+        { topic: "Rules on Body-Worn Cameras: Effect of Failure to Use or Activate Camera", rule: "A.M. No. 21-06-08-SC" },
+        { topic: "Rules on Body-Worn Cameras: Chain of Custody & Admissibility of Recordings", rule: "A.M. No. 21-06-08-SC" }
+      ],
+      "judicial affidavit": [
+        { topic: "Judicial Affidavit Rule: Scope, Application and Mandatory Submission (Sec. 2-3)", rule: "A.M. No. 12-8-8-SC, Sec. 2-3" },
+        { topic: "Judicial Affidavit Rule: Content, Attestation Clause and Jurat Requirements (Sec. 3-4)", rule: "A.M. No. 12-8-8-SC, Sec. 3-4" },
+        { topic: "Judicial Affidavit Rule: Offer, Objections and Cross-Examination of Affiant (Sec. 6-7)", rule: "A.M. No. 12-8-8-SC, Sec. 6-7" },
+        { topic: "Judicial Affidavit Rule: Effect of Non-Compliance, Failure to Submit and Excusable Delay (Sec. 9-10)", rule: "A.M. No. 12-8-8-SC, Sec. 9-10" }
+      ],
+      "hague": [
+        { topic: "1970 Hague Evidence Convention: Scope & Letters of Request (A.M. No. 25-02-17-SC)", rule: "A.M. No. 25-02-17-SC" },
+        { topic: "1970 Hague Evidence Convention: Central Authority & Execution of Request", rule: "A.M. No. 25-02-17-SC" }
+      ],
+      "rape shield": [
+        { topic: "Rape Shield Rule: Inadmissibility of Complainant's Past Sexual Conduct / Reputation", rule: "Rule 130, Sec. 54 & Special Penal Laws" },
+        { topic: "Rape Shield Rule: Recognized Exceptions & Foundational Inquiry", rule: "Supreme Court Jurisprudence" }
+      ]
+    };
 
     const DETERMINISTIC_SUB_PROVISIONS = {
       "3": [
+
         { subTopic: "Original Document Rule: General Rule & Meaning of Original", rule: "Rule 130, Section 3 & 4" },
         { subTopic: "Original Document Rule: Statutory Exceptions (Lost, Custody of Adverse Party, Numerous Accounts, Public Record)", rule: "Rule 130, Section 3(a)-(e)" }
       ],
@@ -2815,44 +2865,123 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
         rawCodalTopics.push({ topic, rule_citation: rule, isCase: false });
       };
 
-      // 1. Explicit Section Ranges (Deterministic Priority)
-      const rangeRegex = /(?:Rule\s*(\d{1,3})[,:\s]+)?(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*(\d{1,3})\s*(?:[-–—]|to|through)\s*(\d{1,3})\b/gi;
-      let rangeMatch;
-      while ((rangeMatch = rangeRegex.exec(raw)) !== null) {
-        const ruleNum = rangeMatch[1] || extractRuleNumberToken(raw) || "130";
-        const startSec = parseInt(rangeMatch[2], 10);
-        const endSec = parseInt(rangeMatch[3], 10);
+      // 1. Check Special Administrative Rules & Circulars Registry (Keywords & A.M. Numbers)
+      const lowerRaw = raw.toLowerCase();
+      let matchedSpecialRule = false;
 
-        if (startSec <= endSec && (endSec - startSec) <= 60) {
-          for (let s = startSec; s <= endSec; s++) {
-            const sKey = String(s);
-            if (ruleNum === "130" && DETERMINISTIC_SUB_PROVISIONS[sKey]) {
-              DETERMINISTIC_SUB_PROVISIONS[sKey].forEach(sub => addCodalTopicUnique(sub.subTopic, sub.rule));
-            } else if (CANONICAL_2019_CODAL_MAP[`${ruleNum}:${sKey}`]) {
-              const entry = CANONICAL_2019_CODAL_MAP[`${ruleNum}:${sKey}`];
-              addCodalTopicUnique(`${entry.title} (Rule ${ruleNum}, Section ${sKey})`, `Rule ${ruleNum}, Section ${sKey}`);
-            } else {
-              addCodalTopicUnique(`Rule ${ruleNum}, Section ${sKey}`, `Rule ${ruleNum}, Section ${sKey}`);
+      // Map official Supreme Court A.M. docket numbers to registry keys
+      const AM_DOCKET_ALIAS_MAP = {
+        "004-07-sc": "child witness",
+        "00-4-07-sc": "child witness",
+        "06-11-5-sc": "dna",
+        "01-7-01-sc": "electronic evidence",
+        "21-06-08-sc": "body-worn",
+        "12-8-8-sc": "judicial affidavit",
+        "25-02-17-sc": "hague"
+      };
+
+      for (const [amNum, regKey] of Object.entries(AM_DOCKET_ALIAS_MAP)) {
+        if (lowerRaw.includes(amNum)) {
+          SPECIAL_RULES_TOPIC_REGISTRY[regKey].forEach(t => addCodalTopicUnique(t.topic, t.rule));
+          matchedSpecialRule = true;
+          break;
+        }
+      }
+
+      if (!matchedSpecialRule) {
+        for (const [key, topicsList] of Object.entries(SPECIAL_RULES_TOPIC_REGISTRY)) {
+          if (lowerRaw.includes(key)) {
+            topicsList.forEach(t => addCodalTopicUnique(t.topic, t.rule));
+            matchedSpecialRule = true;
+          }
+        }
+      }
+
+      // Check if user specifically typed an unlisted A.M. number or Administrative Circular with Section ranges
+      const isGenericAmMatter = /\b(?:A\.M\.\s*No\.|Administrative\s+Matter|A\.C\.\s*No\.)\b/i.test(raw);
+
+      // 2. Explicit Section & Article Ranges (Supports up to 4-digit numbers: e.g. Article 1156-1165)
+      // Only execute if not an independent special rule like Child Witness or DNA
+      if (!matchedSpecialRule) {
+        const rangeRegex = /(?:(?:Rule|Articles?|Arts?\.?)\s*(\d{1,4})[,:\s]+)?(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*(\d{1,4})\s*(?:[-–—]|to|through)\s*(\d{1,4})\b/gi;
+        let rangeMatch;
+        while ((rangeMatch = rangeRegex.exec(raw)) !== null) {
+          const ruleExplicit = rangeMatch[1] || extractRuleNumberToken(raw);
+          const startSec = parseInt(rangeMatch[2], 10);
+          const endSec = parseInt(rangeMatch[3], 10);
+          const hasArticleWord = /\b(?:Articles?|Arts?\.?)\b/i.test(raw);
+          const subLower = currentSubjectName.toLowerCase();
+
+          if (startSec <= endSec && (endSec - startSec) <= 60) {
+            for (let s = startSec; s <= endSec; s++) {
+              const sKey = String(s);
+
+              if (ruleExplicit) {
+                // User explicitly typed "Rule <num>"
+                if (ruleExplicit === "130" && DETERMINISTIC_SUB_PROVISIONS[sKey]) {
+                  DETERMINISTIC_SUB_PROVISIONS[sKey].forEach(sub => addCodalTopicUnique(sub.subTopic, sub.rule));
+                } else if (CANONICAL_2019_CODAL_MAP[`${ruleExplicit}:${sKey}`]) {
+                  const entry = CANONICAL_2019_CODAL_MAP[`${ruleExplicit}:${sKey}`];
+                  addCodalTopicUnique(`${entry.title} (Rule ${ruleExplicit}, Section ${sKey})`, `Rule ${ruleExplicit}, Section ${sKey}`);
+                } else {
+                  addCodalTopicUnique(`Rule ${ruleExplicit}, Section ${sKey}`, `Rule ${ruleExplicit}, Section ${sKey}`);
+                }
+              } else if (hasArticleWord || subLower.includes("criminal") || subLower.includes("civil") || subLower.includes("labor")) {
+                // Dynamically route to Article-based codes according to active subject
+                if (subLower.includes("criminal")) {
+                  addCodalTopicUnique(`Revised Penal Code: Article ${sKey}`, `RPC · Art. ${sKey}`);
+                } else if (subLower.includes("civil")) {
+                  addCodalTopicUnique(`Civil Code: Article ${sKey}`, `Civil Code · Art. ${sKey}`);
+                } else if (subLower.includes("labor")) {
+                  addCodalTopicUnique(`Labor Code: Article ${sKey}`, `Labor Code · Art. ${sKey}`);
+                } else {
+                  addCodalTopicUnique(`${currentSubjectName}: Article ${sKey}`, `${currentSubjectName} · Art. ${sKey}`);
+                }
+              } else if (subLower.includes("tax")) {
+                addCodalTopicUnique(`Tax Code (NIRC): Section ${sKey}`, `NIRC · Sec. ${sKey}`);
+              } else if (subLower.includes("commercial")) {
+                addCodalTopicUnique(`Commercial Law: Section ${sKey}`, `Commercial Law · Sec. ${sKey}`);
+              } else if (isGenericAmMatter) {
+                // Keep the A.M. Matter cleanly isolated — do NOT default to Rule 130!
+                const amCleanTitle = raw.split(/(?:Section|Sec\.)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
+                addCodalTopicUnique(`${amCleanTitle}: Section ${sKey}`, `${amCleanTitle} · Sec. ${sKey}`);
+              } else if (isGenericAmMatter) {
+                // Keep the A.M. Matter cleanly isolated — do NOT default to Rule 130!
+                const amCleanTitle = raw.split(/(?:Section|Sec\.)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
+                addCodalTopicUnique(`${amCleanTitle}: Section ${sKey}`, `${amCleanTitle} · Sec. ${sKey}`);
+              } else {
+                // Evidence / Remedial Law standard Rule 130 fallback
+                if (DETERMINISTIC_SUB_PROVISIONS[sKey]) {
+                  DETERMINISTIC_SUB_PROVISIONS[sKey].forEach(sub => addCodalTopicUnique(sub.subTopic, sub.rule));
+                } else if (CANONICAL_2019_CODAL_MAP[`130:${sKey}`]) {
+                  const entry = CANONICAL_2019_CODAL_MAP[`130:${sKey}`];
+                  addCodalTopicUnique(`${entry.title} (Rule 130, Section ${sKey})`, `Rule 130, Section ${sKey}`);
+                } else {
+                  addCodalTopicUnique(`Rule 130, Section ${sKey}`, `Rule 130, Section ${sKey}`);
+                }
+              }
             }
           }
         }
       }
 
-      // 2. Non-range, non-case lines from typed scope
-      const stitched = stitchWrappedSyllabusLines(raw);
-      for (const line of stitched) {
-        if (/^(?:Module\s+\d+|Part\s+\d+|Do\s+not\s+include)/i.test(line)) continue;
-        if (/(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*\d+\s*(?:[-–—]|to|through)\s*\d+/i.test(line)) continue;
+      // 3. Non-range, non-case lines from typed scope (run only if not already decomposed)
+      if (!matchedSpecialRule) {
+        const stitched = stitchWrappedSyllabusLines(raw);
+        for (const line of stitched) {
+          if (/^(?:Module\s+\d+|Part\s+\d+|Do\s+not\s+include)/i.test(line)) continue;
+          if (/(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*\d+\s*(?:[-–—]|to|through)\s*\d+/i.test(line)) continue;
 
-        const cleanLine = line.replace(/^[-*•■\s]+/, '').replace(/^(?:[a-z]|\d+|[ivx]+)[\.\)]\s*/i, '').trim();
-        if (cleanLine.length < 4) continue;
+          const cleanLine = line.replace(/^[-*•■\s]+/, '').replace(/^(?:[a-z]|\d+|[ivx]+)[\.\)]\s*/i, '').trim();
+          if (cleanLine.length < 4) continue;
 
-        const isCaseLine = /\s+(?:v\b\.?|vs\b\.?|versus)\s+/i.test(cleanLine) ||
-                           /\b(?:G\.R\.|A\.C\.|A\.M\.|B\.M\.|UDK|L-\d)\b/i.test(cleanLine) ||
-                           /^(?:In\s+re\b|In\s+the\s+matter\s+of\b)/i.test(cleanLine);
-        if (isCaseLine) continue;
+          const isCaseLine = /\s+(?:v\b\.?|vs\b\.?|versus)\s+/i.test(cleanLine) ||
+                             /\b(?:G\.R\.|A\.C\.|A\.M\.|B\.M\.|UDK|L-\d)\b/i.test(cleanLine) ||
+                             /^(?:In\s+re\b|In\s+the\s+matter\s+of\b)/i.test(cleanLine);
+          if (isCaseLine) continue;
 
-        addCodalTopicUnique(cleanLine, sanitizeCitation(cleanLine));
+          addCodalTopicUnique(cleanLine, sanitizeCitation(cleanLine));
+        }
       }
 
 // 3. Route strictly according to Active Dimensions
@@ -3134,7 +3263,31 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
 
       const mergedContents = JSON.parse(JSON.stringify(contents));
       if (systemInstruction && mergedContents.length > 0 && mergedContents[0].parts && mergedContents[0].parts[0]) {
-        mergedContents[0].parts[0].text = `[SYSTEM MANDATE - PHILIPPINE BAR RECITATION PROFESSOR]:\n${systemInstruction}\n\n---\n\n${mergedContents[0].parts[0].text}`;
+        const amendatoryAuditMandate = 
+`[PHILIPPINE BAR EXAM REVIEW PROFESSOR — SYLLABUS FIDELITY & DOCTRINAL PROGRESSION MANDATE]:
+1. ACTIVE SUBJECT WORKSPACE: ${currentSubjectName}
+
+2. DUAL-OBLIGATION DIRECTIVE (SYLLABUS ASSIGNMENT + PREVAILING LAW):
+   You are an authoritative Philippine Bar Review Director. Syllabi regularly assign historic landmark cases and foundational codals that have since been modified, superseded, or abandoned. 
+   - DO NOT replace or skip the assigned topic or case. If the question asks for "Republic v. Molina", drill the facts, issue, ruling, and original guidelines of Molina.
+   - DO NOT erase historic codals if assigned. If a question asks for the classic RPC provision on Statutory Rape or the old Dead Man's Statute, test the candidate on the concept assigned.
+
+3. MANDATORY DOCTRINAL EVOLUTION BRIDGE (THE "ATTY. STANLEY" RULE):
+   Whenever the assigned topic or case has been superseded, modified, abandoned, or amended by later jurisprudence or statute, you MUST include a dedicated, unmissable evolution section in both the question debrief and the benchmark breakdown:
+   
+   • For Jurisprudence (Overruled / Modified Precedents):
+     State the assigned case's historic ruling, then provide:
+     "⚠️ BAR EXAM JURISPRUDENTIAL EVOLUTION: While [Assigned Case, e.g., Republic v. CA & Molina (1997)] established [historic doctrine], this doctrine was explicitly abandoned/modified by the Supreme Court En Banc in [Prevailing Case, e.g., Tan-Andal v. Andal, G.R. No. 196359 (2021)]. Explain the precise operational difference: [e.g., Psychological incapacity is now recognized as a legal, not medical, concept; expert psychiatric testimony is no longer an absolute requisite; the totality of evidence standard now controls]."
+     
+   • For Statutes & Rules (Repealed / Amended Provisions):
+     State the codal rule, then provide:
+     "⚡ BAR EXAM AMENDATORY STATUTE ALERT: Note that under [Amending Statute, e.g., R.A. No. 11648 / R.A. No. 10951 / R.A. No. 11576 / 2019 Revised Rules on Evidence / CPRA], [Old Provision/Standard, e.g., statutory rape age threshold of 12 years old] was amended to [Current Enforceable Rule, e.g., under 16 years of age, subject to the close-in-age Romeo & Juliet exemption under Sec. 2]."
+
+4. RECIPROCAL EVALUATION SCORING (BAR EXAM SUBSTANTIAL COMPLIANCE):
+   - If the student recites the historical case/provision accurately but omits the superseding doctrine/statute: Award SATISFACTORY compliance for the assigned topic, but explicitly instruct them in Section 3 ("How to Adjust & Polish Your Delivery") that in the actual Bar Exam, citing only the old doctrine without acknowledging the prevailing amendatory ruling will cost crucial examination points.
+   - If the student recites the modern prevailing rule (*Tan-Andal* or *R.A. 11648*) while discussing the older syllabus topic: Commend their modern awareness and provide the historical bridge.`;
+
+        mergedContents[0].parts[0].text = `${amendatoryAuditMandate}\n\n[TASK INSTRUCTION]:\n${systemInstruction}\n\n---\n\n${mergedContents[0].parts[0].text}`;
       }
 
       const body = {
@@ -3329,9 +3482,12 @@ CRITICAL MANDATE:
       const isExplicitRange = /(?:Rule\s*\d+[,:\s]+)?(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*\d+\s*(?:[-–—]|to|through)\s*\d+\b/i.test(scopeText);
       const localItems = expandDeterministicScopeItems(scopeText);
 
-      // 1. If Explicit Range, or if Uncapped / पर्याप्त items already deterministically parsed from typed scope, use localItems directly!
-      // This prevents the AI from drifting into out-of-scope syllabus modules (e.g. pulling Module 2 or 3 when only Module 4 was pasted).
-      if (isExplicitRange || (localItems.length > 0 && (isUncapped || localItems.length >= batchSize || localItems.some(i => i.isCase || i.isDualPair)))) {
+      // 1. Return deterministic items if:
+      // (a) An explicit range was entered, OR
+      // (b) Cases were found, OR
+      // (c) At least 4 distinct items were already unbundled (e.g. special rule registry or sub-provisions)
+      // This prevents a single broad topic (e.g. "Rules on DNA Evidence" or "Weight of Evidence") from getting stuck as 1 card when uncapped.
+      if (isExplicitRange || localItems.some(i => i.isCase || i.isDualPair) || localItems.length >= 4) {
         return localItems;
       }
 
@@ -4300,15 +4456,16 @@ TASK: Grade the student's recitation strictly on the specific dimension asked in
 
       if (compiledCards.length === 0) return;
 
+      // 1. SAVE IMMEDIATELY to IndexedDB so cards are NEVER lost on tab blur or cancel
       const presetTag = PRESET_PROFILES[state.activePreset] ? PRESET_PROFILES[state.activePreset].name : 'Custom Matrix';
-      const defaultTitle = `${currentSubjectName} - ${presetTag} (${compiledCards.length} Cards)`;
-      const title = prompt("Enter a title for this compiled flashcard deck:", defaultTitle);
-      if (!title || !title.trim()) return;
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const defaultTitle = `${currentSubjectName} - ${presetTag} (${compiledCards.length} Cards · ${timeStr})`;
+      const deckId = 'deck_' + Date.now();
 
       const deckObj = {
-        id: 'deck_' + Date.now(),
+        id: deckId,
         subject: currentSubjectName,
-        title: title.trim(),
+        title: defaultTitle,
         createdAt: new Date().toISOString(),
         cards: compiledCards
       };
@@ -4316,9 +4473,18 @@ TASK: Grade the student's recitation strictly on the specific dimension asked in
       await dbSave('decks', deckObj);
       await stampSubjectModifiedTimestamp();
       await renderDeckListUI();
-      alert(`Success! Deck "${deckObj.title}" (${compiledCards.length} cards) saved to your Master Library.`);
-      // Re-open setup modal to reveal the newly compiled deck in the library
+
+      // 2. Re-open setup modal so the saved deck is immediately visible in the library
       document.getElementById('setupModal')?.classList.remove('hidden');
+
+      // 3. Optional prompt to rename; if canceled or tab is switched, deck remains safe
+      const userTitle = prompt("Deck pre-compiled and saved to library! Rename title (optional):", defaultTitle);
+      if (userTitle && userTitle.trim() && userTitle.trim() !== defaultTitle) {
+        deckObj.title = userTitle.trim();
+        await dbSave('decks', deckObj);
+        await stampSubjectModifiedTimestamp();
+        await renderDeckListUI();
+      }
     }
 
     // ---------------------------------------------------------------------------
