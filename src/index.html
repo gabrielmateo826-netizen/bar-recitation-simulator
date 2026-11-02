@@ -4413,11 +4413,14 @@ function extractCardParagraphsForExport(c) {
         md += `\n\n---\n\n`;
       });
 
-      const blob = new Blob(['\uFEFF', md], { type: "text/markdown;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${deck.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_WordReady.md`;
-      a.click();
+      const fileName = `${deck.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_WordReady.md`;
+      await exportWithSaveDialog(
+        '\uFEFF' + md,
+        fileName,
+        'text/markdown;charset=utf-8',
+        'Markdown Study Sheet (.md)',
+        '.md'
+      );
     }
 
     async function exportDeckAsWordDoc(deckId) {
@@ -4459,11 +4462,14 @@ function extractCardParagraphsForExport(c) {
 
       docHtml += `</body></html>`;
 
-      const blob = new Blob(['\uFEFF', docHtml], { type: "application/msword;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${deck.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_Word.doc`;
-      a.click();
+      const fileName = `${deck.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_Word.doc`;
+      await exportWithSaveDialog(
+        '\uFEFF' + docHtml,
+        fileName,
+        'application/msword;charset=utf-8',
+        'Microsoft Word Document (.doc)',
+        '.doc'
+      );
     }
 
     async function renderDeckListUI() {
@@ -4590,11 +4596,16 @@ function extractCardParagraphsForExport(c) {
         createdAt: deck.createdAt,
         cards: deck.cards
       };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${deck.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_Deck.json`;
-      a.click();
+      const fileName = `${deck.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_Deck.json`;
+      const jsonContent = JSON.stringify(payload, null, 2);
+
+      await exportWithSaveDialog(
+        jsonContent,
+        fileName,
+        'application/json',
+        'Bar Recitation Deck (.json)',
+        '.json'
+      );
     }
 
     async function handleDeckImport(event) {
@@ -5080,7 +5091,7 @@ function extractCardParagraphsForExport(c) {
       document.getElementById('timerDisplay').innerText = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
     }
 
-    function exportSessionMarkdown() {
+    async function exportSessionMarkdown() {
       if (!state.sessionTranscript || state.sessionTranscript.length === 0) {
         alert("No transcript to export.");
         return;
@@ -5097,11 +5108,14 @@ function extractCardParagraphsForExport(c) {
         md += paras.join('\n\n') + `\n\n---\n\n`;
       });
 
-      const blob = new Blob(['\uFEFF', md], { type: "text/markdown;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${currentSubjectName}_Universal_Session_${new Date().toISOString().slice(0, 10)}.md`;
-      a.click();
+      const fileName = `${currentSubjectName}_Universal_Session_${new Date().toISOString().slice(0, 10)}.md`;
+      await exportWithSaveDialog(
+        '\uFEFF' + md,
+        fileName,
+        'text/markdown;charset=utf-8',
+        'Markdown Session Transcript (.md)',
+        '.md'
+      );
     }
 
     async function exportWorkspaceJSON() {
@@ -5123,11 +5137,17 @@ function extractCardParagraphsForExport(c) {
         mastery: mastery,
         decks: decks
       };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `UniversalBarSimulator_Master_Backup_${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
+      
+      const fileName = `UniversalBarSimulator_Master_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+      const jsonContent = JSON.stringify(payload, null, 2);
+
+      await exportWithSaveDialog(
+        jsonContent,
+        fileName,
+        'application/json',
+        'Universal Master Database Backup (.json)',
+        '.json'
+      );
     }
 
     async function handleWorkspaceImport(event) {
@@ -5721,8 +5741,8 @@ function extractCardParagraphsForExport(c) {
     // UNIVERSAL "SAVE AS" FILE EXPORTER (TAURI DESKTOP + BROWSER PICKER + MOBILE)
     // =========================================================================
     async function exportWithSaveDialog(content, defaultFilename, mimeType, description, extension) {
-      // 1. Native Tauri Environment (Windows .msi / macOS .dmg)
-      if (window.__TAURI__ && window.__TAURI__.dialog && window.__TAURI__.fs) {
+      // 1. Native Tauri v2 Environment
+      if (window.__TAURI__?.dialog && (window.__TAURI__?.fs || window.__TAURI__?.core)) {
         try {
           const filePath = await window.__TAURI__.dialog.save({
             defaultPath: defaultFilename,
@@ -5733,17 +5753,26 @@ function extractCardParagraphsForExport(c) {
           });
 
           if (filePath) {
-            await window.__TAURI__.fs.writeTextFile(filePath, content);
-            alert(`File successfully saved to:\n${filePath}`);
+            if (window.__TAURI__.fs?.writeTextFile) {
+              await window.__TAURI__.fs.writeTextFile(filePath, content);
+            } else if (window.__TAURI__.core?.invoke) {
+              await window.__TAURI__.core.invoke('plugin:fs|write_file', {
+                path: filePath,
+                contents: Array.from(new TextEncoder().encode(content))
+              });
+            }
+            alert(`File saved:\n${filePath}`);
+            return;
+          } else {
+            return; // User canceled the picker
           }
-          return;
         } catch (err) {
           console.warn("Tauri native dialog failed, attempting browser picker:", err);
         }
       }
 
       // 2. Modern Desktop Web Browsers (Chrome, Edge, Brave - File System Access API)
-      if ('showSaveFilePicker' in window) {
+      if (typeof window.showSaveFilePicker === 'function') {
         try {
           const handle = await window.showSaveFilePicker({
             suggestedName: defaultFilename,
@@ -5771,26 +5800,11 @@ function extractCardParagraphsForExport(c) {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
     }
 
     // Automatically retrieves active cards from state pools or local storage
     function getActiveCards() {
-      if (state.activeDeckCardsPool && state.activeDeckCardsPool.length) return state.activeDeckCardsPool;
-      if (state.activeAgenda && state.activeAgenda.length) return state.activeAgenda;
-      if (state.allUnbundledPool && state.allUnbundledPool.length) return state.allUnbundledPool;
-      if (typeof currentDeckCards !== 'undefined' && currentDeckCards?.length) return currentDeckCards;
-      if (typeof allCards !== 'undefined' && allCards?.length) return allCards;
-      if (typeof cards !== 'undefined' && cards?.length) return cards;
-      
-      const stored = localStorage.getItem('bar_recitation_cards') || localStorage.getItem('cards') || localStorage.getItem('deck');
-      if (stored) {
-        try { return JSON.parse(stored); } catch (e) {}
-      }
-      return [];
-    }
-// Automatically retrieves active cards from state pools or local storage
-function getActiveCards() {
       if (state.activeDeckCardsPool && state.activeDeckCardsPool.length) return state.activeDeckCardsPool;
       if (state.activeAgenda && state.activeAgenda.length) return state.activeAgenda;
       if (state.allUnbundledPool && state.allUnbundledPool.length) return state.allUnbundledPool;
