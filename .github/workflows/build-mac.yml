@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-mac:
-    runs-on: macos-15 # Apple Silicon (M1/M2/M3/M4) runner
+    runs-on: macos-13 # Apple Silicon (M1/M2/M3/M4) runner
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
