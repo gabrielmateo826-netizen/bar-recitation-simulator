@@ -5157,17 +5157,58 @@ function extractCardParagraphsForExport(c) {
       }
     }
 
+// Automatically retrieves active cards from state pools or directly from IndexedDB
+async function getActiveCards() {
+      if (state.activeDeckCardsPool && state.activeDeckCardsPool.length > 0) {
+        return state.activeDeckCardsPool;
+      }
+      if (state.activeAgenda && state.activeAgenda.length > 0) {
+        return state.activeAgenda;
+      }
+      if (state.allUnbundledPool && state.allUnbundledPool.length > 0) {
+        return state.allUnbundledPool;
+      }
+
+      // Direct IndexedDB query fallback
+      try {
+        const allDecks = await dbGetAll('decks');
+        if (allDecks && allDecks.length > 0) {
+          allDecks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          if (allDecks[0].cards && allDecks[0].cards.length > 0) {
+            return allDecks[0].cards;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not query decks from DB:", err);
+      }
+
+      const stored = localStorage.getItem('bar_recitation_cards') || localStorage.getItem('cards') || localStorage.getItem('deck');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch (_) {}
+      }
+      return [];
+    }
+
     async function exportSingleDeckJSON(deckId) {
       const deck = await dbGet('decks', deckId);
-      if (!deck) return;
+      if (!deck || !deck.cards || deck.cards.length === 0) {
+        alert("This deck has no cards to export.");
+        return;
+      }
+
       const payload = {
         format: "ph_bar_recit_deck_v1",
         deckId: deck.id,
         title: deck.title,
         subject: deck.subject || currentSubjectName,
         createdAt: deck.createdAt,
+        cardCount: deck.cards.length,
         cards: deck.cards
       };
+
       const fileName = `${deck.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_Deck.json`;
       const jsonContent = JSON.stringify(payload, null, 2);
 
@@ -6644,42 +6685,65 @@ async function exportCardsAsDoc(cardsArray) {
       alert(`Success! Created independent copy: "${newDeck.title}" (${newDeck.cards.length} cards).`);
     }
 
-    async function promptMergeDecks(targetDeckId) {
+    async function promptMergeDecks(sourceDeckIdA) {
       const decks = await dbGetAll('decks');
-      const targetDeck = decks.find(d => d.id === targetDeckId);
-      if (!targetDeck) return;
+      const deckA = decks.find(d => d.id === sourceDeckIdA);
+      if (!deckA) return;
 
-      const availableSources = decks.filter(d => d.id !== targetDeckId);
-      if (availableSources.length === 0) {
-        alert("No other decks in this subject workspace to merge.");
+      const otherDecks = decks.filter(d => d.id !== sourceDeckIdA);
+      if (otherDecks.length === 0) {
+        alert("No other decks in this subject workspace to merge with.");
         return;
       }
 
-      let listStr = `Select a deck to merge INTO "${targetDeck.title}":\n(Note: The source deck will remain intact)\n\n`;
-      availableSources.forEach((d, idx) => {
-        listStr += `${idx + 1}. ${d.title} (${d.cards ? d.cards.length : 0} cards)\n`;
+      let promptMsg = `Merge "${deckA.title}" with another deck.\n(Both original decks will remain untouched)\n\nSelect the second deck:\n`;
+      otherDecks.forEach((d, idx) => {
+        promptMsg += `${idx + 1}. ${d.title} (${d.cards ? d.cards.length : 0} cards)\n`;
       });
-      listStr += `\nEnter the number of the source deck:`;
+      promptMsg += `\nEnter the number of the second deck:`;
 
-      const input = prompt(listStr);
+      const input = prompt(promptMsg);
       if (!input) return;
 
-      const selectedIdx = parseInt(input.trim(), 10) - 1;
-      if (isNaN(selectedIdx) || selectedIdx < 0 || selectedIdx >= availableSources.length) {
+      const choice = parseInt(input.trim(), 10) - 1;
+      if (isNaN(choice) || choice < 0 || choice >= otherDecks.length) {
         alert("Invalid selection.");
         return;
       }
 
-      const sourceDeck = availableSources[selectedIdx];
-      const incomingCards = JSON.parse(JSON.stringify(sourceDeck.cards || []));
+      const deckB = otherDecks[choice];
+      const cardsA = Array.isArray(deckA.cards) ? JSON.parse(JSON.stringify(deckA.cards)) : [];
+      const cardsB = Array.isArray(deckB.cards) ? JSON.parse(JSON.stringify(deckB.cards)) : [];
 
-      if (!targetDeck.cards) targetDeck.cards = [];
-      targetDeck.cards.push(...incomingCards);
+      // Combine cards and prevent duplicate question calls
+      const combinedCards = [...cardsA];
+      const seenPrompts = new Set(cardsA.map(c => (c.question_text || c.topic || '').trim().toLowerCase()));
 
-      await dbSave('decks', targetDeck);
+      cardsB.forEach(cB => {
+        const key = (cB.question_text || cB.topic || '').trim().toLowerCase();
+        if (!seenPrompts.has(key)) {
+          seenPrompts.add(key);
+          combinedCards.push(cB);
+        }
+      });
+
+      const defaultTitle = `${deckA.title} + ${deckB.title} (Merged)`;
+      const newTitle = prompt("Enter a title for the new merged deck:", defaultTitle);
+      if (!newTitle || !newTitle.trim()) return;
+
+      const mergedDeckObj = {
+        id: 'deck_merged_' + Date.now(),
+        subject: currentSubjectName,
+        title: newTitle.trim(),
+        createdAt: new Date().toISOString(),
+        cards: combinedCards
+      };
+
+      await dbSave('decks', mergedDeckObj);
       await stampSubjectModifiedTimestamp();
       await renderDeckListUI();
-      alert(`Merged ${incomingCards.length} cards from "${sourceDeck.title}" into "${targetDeck.title}". Total cards: ${targetDeck.cards.length}.`);
+
+      alert(`Created new merged deck: "${mergedDeckObj.title}" with ${mergedDeckObj.cards.length} cards.\nBoth original decks were preserved.`);
     }
 
     // =========================================================================
