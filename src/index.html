@@ -5154,6 +5154,117 @@ function extractCardParagraphsForExport(c) {
       if (confirm(`Permanently delete all saved decks for ${currentSubjectName}?`)) {
         await dbClearSubjectStore('decks');
         await renderDeckListUI();
+    // =========================================================================
+    // DECK MERGE & DUPLICATION ENGINE (NON-DESTRUCTIVE)
+    // =========================================================================
+    function isCardBuriedToday(card) {
+      if (!card || !card.buriedUntil) return false;
+      return new Date(card.buriedUntil).getTime() > Date.now();
+    }
+
+    async function duplicateSavedDeck(deckId) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck) return;
+      const copyTitle = prompt("Enter title for the duplicate deck:", `${deck.title} (Copy)`);
+      if (!copyTitle || !copyTitle.trim()) return;
+
+      const dupObj = {
+        id: 'deck_copy_' + Date.now(),
+        subject: currentSubjectName,
+        title: copyTitle.trim(),
+        createdAt: new Date().toISOString(),
+        cards: Array.isArray(deck.cards) ? JSON.parse(JSON.stringify(deck.cards)) : []
+      };
+
+      await dbSave('decks', dupObj);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      alert(`✅ Duplicated deck: "${dupObj.title}" (${dupObj.cards.length} cards).`);
+    }
+
+    async function promptMergeDecks(sourceDeckIdA) {
+      const decks = await dbGetAll('decks');
+      const deckA = decks.find(d => d.id === sourceDeckIdA);
+      if (!deckA) {
+        alert("Selected deck could not be found.");
+        return;
+      }
+
+      const otherDecks = decks.filter(d => d.id !== sourceDeckIdA);
+      if (otherDecks.length === 0) {
+        alert("No other decks in this subject workspace to merge with. Create or import another deck first.");
+        return;
+      }
+
+      // 1. Display list of decks with card counts
+      let menu = `MERGE DECKS (Non-Destructive)\n\n` +
+                 `Deck 1: "${deckA.title}" (${deckA.cards ? deckA.cards.length : 0} cards)\n\n` +
+                 `Select the second deck to merge with Deck 1:\n`;
+      otherDecks.forEach((d, idx) => {
+        menu += `${idx + 1}. ${d.title} (${d.cards ? d.cards.length : 0} cards)\n`;
+      });
+      menu += `\nEnter the number of the second deck (1-${otherDecks.length}):`;
+
+      const input = prompt(menu);
+      if (!input) return;
+
+      const choice = parseInt(input.trim(), 10) - 1;
+      if (isNaN(choice) || choice < 0 || choice >= otherDecks.length) {
+        alert("Invalid selection.");
+        return;
+      }
+
+      const deckB = otherDecks[choice];
+      const cardsA = Array.isArray(deckA.cards) ? JSON.parse(JSON.stringify(deckA.cards)) : [];
+      const cardsB = Array.isArray(deckB.cards) ? JSON.parse(JSON.stringify(deckB.cards)) : [];
+
+      // 2. Combine all cards from both decks without dropping any
+      const combinedCards = [];
+      const seenCardSignatures = new Set();
+
+      function insertCard(card) {
+        // Fingerprint by question prompt, topic, or unique payload
+        const sig = (card.question_text || card.question || card.topic || card.case_title || JSON.stringify(card)).trim().toLowerCase();
+        if (!seenCardSignatures.has(sig)) {
+          seenCardSignatures.add(sig);
+          combinedCards.push({
+            ...card,
+            id: 'card_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)
+          });
+        }
+      }
+
+      cardsA.forEach(insertCard);
+      cardsB.forEach(insertCard);
+
+      // 3. Prompt for NEW deck title (leaves Deck A and Deck B 100% untouched)
+      const defaultTitle = `${deckA.title} + ${deckB.title} (Merged)`;
+      const newTitle = prompt(
+        `Merging Decks:\n` +
+        `• "${deckA.title}": ${cardsA.length} cards\n` +
+        `• "${deckB.title}": ${cardsB.length} cards\n\n` +
+        `Total combined unique cards: ${combinedCards.length}\n` +
+        `(Note: Both original decks will remain completely untouched)\n\n` +
+        `Enter a title for this NEW merged deck:`,
+        defaultTitle
+      );
+      if (!newTitle || !newTitle.trim()) return;
+
+      // 4. Save brand new deck to IndexedDB
+      const mergedDeckObj = {
+        id: 'deck_merged_' + Date.now(),
+        subject: currentSubjectName,
+        title: newTitle.trim(),
+        createdAt: new Date().toISOString(),
+        cards: combinedCards
+      };
+
+      await dbSave('decks', mergedDeckObj);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+
+      alert(`✅ Created NEW merged deck: "${mergedDeckObj.title}" with ${mergedDeckObj.cards.length} cards.\n\nBoth "${deckA.title}" and "${deckB.title}" remain preserved in your library.`);
+    }
       }
     }
 
