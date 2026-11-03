@@ -104,6 +104,12 @@
     <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
     <span>Scope & Decks (<span id="deckCountHeaderBadge" class="font-bold text-amber-400">0</span>)</span>
   </button>
+
+  <!-- TOP APP BAR CREATE CARD BUTTON -->
+  <button type="button" onclick="openCardCreatorModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-300 px-3 py-1.5 rounded border border-emerald-700/60 font-mono font-bold flex items-center space-x-1.5 transition shadow-sm cursor-pointer">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    <span>+ Create Card</span>
+  </button>
 </div>
 </header>
 
@@ -199,7 +205,12 @@
           <label id="answerPadLabel" for="studentAnswer" class="text-sm font-semibold tracking-wide text-slate-300 uppercase">
             Recitation Answer Pad (Polymorphic: ALAC · FIR · Codal)
           </label>
-          <span id="wordCount" class="text-xs font-mono text-slate-400">0 words</span>
+          <div class="flex items-center space-x-2">
+            <button id="editCurrentCardBtn" type="button" onclick="editActiveCardInPlace()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-300 px-2.5 py-0.5 rounded border border-amber-700/70 font-mono font-semibold transition cursor-pointer" title="Edit this card's prompt, citations, or model answers in place without losing your active recitation session">
+              ✏️ Edit Card
+            </button>
+            <span id="wordCount" class="text-xs font-mono text-slate-400">0 words</span>
+          </div>
         </div>
 
         <textarea
@@ -319,6 +330,266 @@
             <span>Export Study Sheet (.md)</span>
           </button>
           <button onclick="toggleModal('debriefModal')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-lg text-xs transition">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PHASE 2: DECK CARD BROWSER & INSPECTOR MODAL ("VIEW CARDS")               -->
+  <!-- ========================================================================= -->
+  <div id="deckBrowserModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[65] hidden flex items-center justify-center p-3 md:p-6">
+    <div class="bg-slate-900 border border-amber-600/60 rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- HEADER -->
+      <div class="px-6 py-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-3">
+          <span class="w-8 h-8 rounded bg-amber-600 flex items-center justify-center font-serif font-bold text-slate-950 text-base shadow">🗂</span>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 id="browserDeckTitle" class="font-serif font-bold text-slate-100 text-base truncate max-w-md">Deck Inspector</h2>
+              <span id="browserDeckCountBadge" class="text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-800/80 px-2 py-0.5 rounded font-bold">0 Cards</span>
+            </div>
+            <p class="text-[11px] text-slate-400 font-mono">Inspect, search, review, duplicate, suspend, bury, or delete individual cards.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeDeckBrowserModal()" class="text-slate-400 hover:text-slate-200 text-xl leading-none">&times;</button>
+      </div>
+
+      <!-- SEARCH & STATE FILTER CONTROLS BAR -->
+      <div class="px-6 py-3 border-b border-slate-800 bg-slate-950/50 flex flex-wrap items-center justify-between gap-2.5">
+        <div class="flex items-center space-x-2 flex-1 min-w-[240px]">
+          <input type="text" id="browserSearchInput" oninput="filterBrowserCardRows()" placeholder="Search topic, case title, prompt, or statutory citation..." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 font-sans focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <!-- 5-STATE FILTER BUTTONS -->
+        <div class="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5 space-x-1 text-[11px] font-mono">
+          <button type="button" id="filterBtn_ALL" onclick="setBrowserStateFilter('ALL')" class="px-2.5 py-1 rounded bg-amber-600 text-slate-950 font-bold transition">All (<span id="count_ALL">0</span>)</button>
+          <button type="button" id="filterBtn_ACTIVE" onclick="setBrowserStateFilter('ACTIVE')" class="px-2.5 py-1 rounded text-slate-400 hover:text-slate-200 transition">Active (<span id="count_ACTIVE">0</span>)</button>
+          <button type="button" id="filterBtn_SUSPENDED" onclick="setBrowserStateFilter('SUSPENDED')" class="px-2.5 py-1 rounded text-red-400 hover:text-red-300 transition" title="Cards permanently excluded from active recitation batches without deleting">Suspended (<span id="count_SUSPENDED">0</span>)</button>
+          <button type="button" id="filterBtn_BURIED" onclick="setBrowserStateFilter('BURIED')" class="px-2.5 py-1 rounded text-amber-400 hover:text-amber-300 transition" title="Cards hidden until tomorrow's 4:00 AM drill cycle">Buried (<span id="count_BURIED">0</span>)</button>
+          <button type="button" id="filterBtn_DEFICIENT" onclick="setBrowserStateFilter('DEFICIENT')" class="px-2.5 py-1 rounded text-rose-400 hover:text-rose-300 transition" title="Cards flagged for critical Leitner drill">Deficient (<span id="count_DEFICIENT">0</span>)</button>
+        </div>
+
+        <button type="button" onclick="openStudioForSpecificDeck(currentBrowsingDeckId)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow flex items-center space-x-1">
+          <span>+ Add Card</span>
+        </button>
+      </div>
+
+      <!-- CARDS LIST CONTAINER -->
+      <div id="browserCardsContainer" class="p-6 overflow-y-auto space-y-2 flex-1 text-xs text-slate-300">
+        <!-- Rendered dynamically by renderBrowserCardsList() -->
+      </div>
+
+      <!-- FOOTER -->
+      <div class="px-6 py-3 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs font-mono text-slate-400">
+        <span id="browserFooterSummary">Showing 0 cards</span>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="bulkUnsuspendCurrentDeck()" class="text-[11px] text-emerald-400 hover:underline" title="Restore all suspended cards back to the active recitation pool">Unsuspend All</button>
+          <span>·</span>
+          <button type="button" onclick="bulkUnburyCurrentDeck()" class="text-[11px] text-amber-400 hover:underline" title="Wake up all buried cards for today's recitation pool">Unbury All</button>
+          <span>·</span>
+          <button type="button" onclick="closeDeckBrowserModal()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-bold transition">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ========================================================================= -->
+  <!-- PHASE 3: CUSTOM FLASHCARD STUDIO & ARCHETYPE MODAL                        -->
+  <!-- ========================================================================= -->
+  <div id="cardCreatorModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-3 md:p-6">
+    <div class="bg-slate-900 border border-amber-600/60 rounded-2xl max-w-4xl w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden relative">
+      
+      <!-- PHASE 4: FLOATING CLOZE SELECTION TOOLBAR -->
+      <div id="clozeFloatingToolbar" class="hidden fixed z-[90] bg-slate-950 border border-amber-500/80 rounded-lg shadow-2xl px-2 py-1 flex items-center space-x-1.5 transition-all">
+        <button type="button" onclick="applyClozeToActiveSelection(false)" class="px-2 py-0.5 bg-amber-600 hover:bg-amber-500 text-slate-950 text-[10px] font-mono font-bold rounded flex items-center space-x-1 shadow cursor-pointer">
+          <span>{{c}} Make Cloze</span>
+        </button>
+        <button type="button" onclick="applyClozeToActiveSelection(true)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-300 text-[10px] font-mono font-bold rounded flex items-center space-x-1 border border-slate-700 cursor-pointer">
+          <span>+ With Hint</span>
+        </button>
+        <span class="text-[9px] font-mono text-slate-400 pl-1 border-l border-slate-800">Ctrl+Shift+C</span>
+      </div>
+
+      <!-- HEADER -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-3">
+          <span class="w-8 h-8 rounded bg-amber-600 flex items-center justify-center font-serif font-bold text-slate-950 text-base shadow">✏️</span>
+          <div>
+            <h2 id="cardCreatorModalTitle" class="font-serif font-bold text-slate-100 text-base">Custom Flashcard Studio</h2>
+            <p class="text-[11px] text-slate-400 font-mono">5 Legal Archetypes · Dynamic Deck Routing · In-Place Editing</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeCardCreatorModal()" class="text-slate-400 hover:text-slate-200 text-xl leading-none">&times;</button>
+      </div>
+
+      <!-- DESTINATION ROUTING & TARGET DECK -->
+      <div class="px-6 py-3 border-b border-slate-800 bg-slate-950/40 flex flex-wrap items-center justify-between gap-3">
+        <!-- PHASE 5: STUDIO MODE SELECTOR -->
+        <div class="flex items-center space-x-1.5 bg-slate-950 border border-slate-800 p-0.5 rounded-lg">
+          <button type="button" id="studioModeSingleBtn" onclick="setCardStudioMode('SINGLE')" class="px-3 py-1 rounded text-xs font-mono font-bold transition bg-amber-600 text-slate-950">
+            Single Card Form
+          </button>
+          <button type="button" id="studioModeBulkBtn" onclick="setCardStudioMode('BULK')" class="px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-slate-200 transition">
+            Bulk CSV / TSV Import
+          </button>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <label class="text-[11px] font-mono text-slate-400">Target Deck:</label>
+          <select id="cardDestinationDeckSelect" onchange="onDestinationDeckSelectChanged(this.value)" class="text-xs font-mono bg-slate-950 text-amber-300 border border-slate-700 rounded px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500 max-w-[260px] truncate">
+            <option value="__NEW__">+ Create New Deck...</option>
+          </select>
+          <input type="text" id="newDeckTitleInput" placeholder="New Deck Title..." class="text-xs font-mono bg-slate-950 text-slate-200 border border-amber-600/70 rounded px-2.5 py-1 focus:outline-none w-52" />
+        </div>
+      </div>
+
+      <!-- MODAL BODY -->
+      <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs text-slate-300">
+        
+        <!-- PANEL A: SINGLE CARD AUTHORING STUDIO -->
+        <div id="singleCardStudioPanel" class="space-y-4">
+          <!-- ARCHETYPE BUTTON SELECTOR -->
+          <div>
+            <label class="block text-[11px] font-mono uppercase text-slate-400 font-bold mb-1.5">Recitation Archetype:</label>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+              <button type="button" id="archBtn_CODAL" onclick="setCardArchetype('CODAL')" class="p-2 rounded-lg border border-amber-600 bg-amber-950/40 text-amber-300 font-mono font-bold text-left transition shadow">
+                § Codal & Statutory
+              </button>
+              <button type="button" id="archBtn_CASE" onclick="setCardArchetype('CASE')" class="p-2 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-mono font-bold text-left transition">
+                ⚖️ Case Brief (FIR)
+              </button>
+              <button type="button" id="archBtn_ALAC" onclick="setCardArchetype('ALAC')" class="p-2 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-mono font-bold text-left transition">
+                ◈ Bar ALAC Hypothetical
+              </button>
+              <button type="button" id="archBtn_PROCEDURAL" onclick="setCardArchetype('PROCEDURAL')" class="p-2 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-mono font-bold text-left transition">
+                🛡️ Procedural Defense / Bar
+              </button>
+              <button type="button" id="archBtn_SIMPLE" onclick="setCardArchetype('SIMPLE')" class="p-2 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-mono font-bold text-left transition">
+                ⚡ Simple Front / Back
+              </button>
+            </div>
+          </div>
+
+          <!-- COMMON TOPIC & CITATION -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="md:col-span-2">
+              <label class="block text-[11px] font-mono uppercase text-slate-400 font-bold mb-1" id="customTopicLabel">Topic / Provision / Case Title *</label>
+              <input type="text" id="customTopicInput" placeholder="e.g. Dying Declaration or People v. Estibal" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 text-xs focus:outline-none focus:border-amber-500 font-sans" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono uppercase text-slate-400 font-bold mb-1">Citation / Docket</label>
+              <input type="text" id="customCitationInput" placeholder="e.g. Rule 130, Sec. 38 or G.R. 208749" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 text-xs focus:outline-none focus:border-amber-500 font-mono" />
+            </div>
+          </div>
+
+          <!-- QUESTION CALL -->
+          <div>
+            <label class="block text-[11px] font-mono uppercase text-slate-400 font-bold mb-1">Recitation Question / Prompt *</label>
+            <textarea id="customQuestionPromptInput" rows="2" placeholder="e.g. Counsel, what are the four essential requisites of a dying declaration under the Rules on Evidence?" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 text-xs focus:outline-none focus:border-amber-500 resize-none font-sans leading-relaxed"></textarea>
+          </div>
+
+          <!-- DYNAMIC SUB-FORMS -->
+          <!-- 1. CODAL FIELDS -->
+          <div id="archetypeCodalFields" class="space-y-3">
+            <div>
+              <label class="block text-[10px] font-mono uppercase text-amber-300 font-bold mb-1">Verbatim Statutory Text / Operative Rule Summary</label>
+              <textarea id="codalRuleInput" rows="2" placeholder="State the statutory provision text..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none leading-relaxed"></textarea>
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono uppercase text-emerald-400 font-bold mb-1">Essential Elements & Requisites (Numbered Enumeration)</label>
+              <textarea id="codalRequisitesInput" rows="3" placeholder="(1) That death is impending...&#10;(2) That the declarant is conscious of impending death...&#10;(3) That the declaration refers to the cause and surrounding circumstances..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none font-mono leading-relaxed"></textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-mono uppercase text-amber-400 font-bold mb-1">Express Statutory Exceptions / Provisos</label>
+                <textarea id="codalStatExceptionsInput" rows="2" placeholder="(1) ..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none font-mono"></textarea>
+              </div>
+              <div>
+                <label class="block text-[10px] font-mono uppercase text-sky-400 font-bold mb-1">Jurisprudential Exceptions & Doctrines</label>
+                <textarea id="codalJurisExceptionsInput" rows="2" placeholder="(1) ..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none font-mono"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. CASE FIR FIELDS -->
+          <div id="archetypeCaseFields" class="space-y-3 hidden">
+            <div>
+              <label class="block text-[10px] font-mono uppercase text-amber-400 font-bold mb-1">Material Operative Facts & Procedural Posture</label>
+              <textarea id="caseFactsInput" rows="3" placeholder="State the material operative facts, parties, and trial history..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none leading-relaxed"></textarea>
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono uppercase text-amber-300 font-bold mb-1">Precise Legal Issue</label>
+              <textarea id="caseIssueInput" rows="2" placeholder="Whether or not the evidence is admissible..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none leading-relaxed"></textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-mono uppercase text-sky-400 font-bold mb-1">Supreme Court Ruling (Categorical)</label>
+                <textarea id="caseRulingInput" rows="2" placeholder="YES/NO. The Supreme Court held that..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none leading-relaxed"></textarea>
+              </div>
+              <div>
+                <label class="block text-[10px] font-mono uppercase text-emerald-400 font-bold mb-1">Controlling Ratio Decidendi & Legal Test</label>
+                <textarea id="caseRatioInput" rows="2" placeholder="The legal principle established is..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none leading-relaxed"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. BAR ALAC HYPOTHETICAL & PROCEDURAL REMEDY -->
+          <div id="archetypeAlacFields" class="space-y-2 hidden">
+            <div>
+              <label class="block text-[10px] font-mono uppercase text-emerald-400 font-bold mb-0.5">A - Direct Answer / Core Ruling</label>
+              <input type="text" id="alacAInput" placeholder="Yes / No / The objection must be sustained..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono uppercase text-amber-400 font-bold mb-0.5">L - Legal Basis (Statute & Jurisprudence)</label>
+              <textarea id="alacLInput" rows="2" placeholder="Under Rule 130, Section... and the landmark ruling in..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono uppercase text-amber-300 font-bold mb-0.5">A - Factual Application to Problem</label>
+              <textarea id="alacAppInput" rows="2" placeholder="Applying the rule to the problem facts..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none resize-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono uppercase text-sky-400 font-bold mb-0.5">C - Definitive Conclusion</label>
+              <input type="text" id="alacCInput" placeholder="Hence, the evidence is inadmissible." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 text-xs focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- 4. SIMPLE FRONT & BACK -->
+          <div id="archetypeSimpleFields" class="space-y-3 hidden">
+            <div>
+              <label class="block text-[10px] font-mono uppercase text-emerald-400 font-bold mb-1">Authoritative Model Answer / Back of Card</label>
+              <textarea id="simpleAnswerInput" rows="5" placeholder="Enter the complete model answer that will be checked during recitation..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-200 text-xs focus:outline-none resize-none leading-relaxed"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL B: BULK CSV / TSV / ANKI INGESTION PANEL -->
+        <div id="bulkCardStudioPanel" class="space-y-3 hidden">
+          <div class="p-3 bg-slate-950 border border-sky-800/60 rounded-xl space-y-1">
+            <span class="text-xs font-mono font-bold text-sky-300 block">Bulk CSV / TSV Ingestion Instructions:</span>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Paste multi-row text directly from Excel, Google Sheets, or Anki text exports.<br>
+              Columns supported (Tab or Comma separated):<br>
+              <code class="text-amber-300 font-mono">Topic [TAB] Question [TAB] Model Answer [TAB] Citation (Optional)</code><br>
+              <span class="text-slate-500 text-[10px]">Note: HTML tags (<code class="font-mono">&lt;br&gt;</code>) and Anki media tags (<code class="font-mono">[sound:...]</code>) will be stripped automatically.</span>
+            </p>
+          </div>
+
+          <textarea id="bulkImportRawText" rows="11" oninput="previewBulkImportCount()" placeholder="Topic&#9;Question&#9;Model Answer&#9;Citation&#10;Dying Declaration&#9;What are the requisites of a dying declaration?&#9;(1) Impending death (2) Consciousness of death (3) Refers to cause...&#9;Rule 130 Sec. 38" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-200 text-xs font-mono focus:outline-none focus:border-amber-500 resize-none leading-relaxed"></textarea>
+          <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+            <span id="bulkParseStatus">0 card rows detected</span>
+            <span class="text-emerald-400">0 ms Instant Client-Side Parsing</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+        <span id="cardStudioFooterStatus" class="text-xs font-mono text-slate-400">Ready to save</span>
+        <div class="flex items-center space-x-2.5">
+          <button type="button" onclick="closeCardCreatorModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-lg text-xs font-mono transition">Cancel</button>
+          <button type="button" id="saveAndAddAnotherBtn" onclick="saveCustomCard(true)" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/60 font-bold px-4 py-2 rounded-lg text-xs font-mono transition">Save & Add Another</button>
+          <button type="button" id="saveAndCloseCardBtn" onclick="saveCustomCard(false)" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-5 py-2 rounded-lg text-xs font-mono transition shadow">Save Card</button>
         </div>
       </div>
     </div>
@@ -1273,7 +1544,48 @@
       "130:51": { title: "General rule (Opinion Rule)", text: "Section 51. General rule. — The opinion of a witness is not admissible, except as indicated in the following sections. (48)" },
       "130:52": { title: "Opinion of expert witness", text: "Section 52. Opinion of expert witness. — The opinion of a witness on a matter requiring special knowledge, skill, experience, training or education, which he or she is shown to possess, may be received in evidence. (49a)" },
       "130:53": { title: "Opinion of ordinary witnesses", text: "Section 53. Opinion of ordinary witnesses. — The opinion of a witness, for which proper basis is given, may be received in evidence regarding — (a) the identity of a person about whom he or she has adequate knowledge; (b) a handwriting with which he or she has sufficient familiarity; and (c) the mental sanity of a person with whom he or she is sufficiently acquainted. The witness may also testify on his or her impressions of the emotion, behavior, condition or appearance of a person. (50a)" },
-      "130:54": { title: "Character evidence not generally admissible; exceptions", text: "Section 54. Character evidence not generally admissible; exceptions. — Evidence of a person's character or a trait of character is not admissible for the purpose of proving action in conformity therewith on a particular occasion, except:\n(a) In Criminal Cases: (1) The character of the offended party may be proved if it tends to establish in any reasonable degree the probability or improbability of the offense charged. (2) The accused may prove his or her good moral character, pertinent to the moral trait involved in the offense charged. However, the prosecution may not prove his or her bad moral character unless on rebuttal.\n(b) In Civil Cases: Evidence of the moral character of a party in a civil case is admissible only when pertinent to the issue of character involved in the case.\n(c) In Criminal and Civil Cases: Evidence of the good character of a witness is not admissible until such character has been impeached. (51a)" }
+      "130:54": { title: "Character evidence not generally admissible; exceptions", text: "Section 54. Character evidence not generally admissible; exceptions. — Evidence of a person's character or a trait of character is not admissible for the purpose of proving action in conformity therewith on a particular occasion, except:\n(a) In Criminal Cases: (1) The character of the offended party may be proved if it tends to establish in any reasonable degree the probability or improbability of the offense charged. (2) The accused may prove his or her good moral character, pertinent to the moral trait involved in the offense charged. However, the prosecution may not prove his or her bad moral character unless on rebuttal.\n(b) In Civil Cases: Evidence of the moral character of a party in a civil case is admissible only when pertinent to the issue of character involved in the case.\n(c) In Criminal and Civil Cases: Evidence of the good character of a witness is not admissible until such character has been impeached. (51a)" },
+      // RULE 133: WEIGHT AND SUFFICIENCY OF EVIDENCE (COMPLETE UNTRUNCATED TEXT)
+      "133:1": { title: "Preponderance of evidence, how determined", text: "Section 1. Preponderance of evidence, how determined. — In civil cases, the party having the burden of proof must establish his or her case by a preponderance of evidence. In determining where the preponderance or superior weight of evidence on the issues involved lies, the court may consider all the facts and circumstances of the case, the witnesses' manner of testifying, their intelligence, their means and opportunity of knowing the facts to which they are testifying, the nature of the facts to which they testify, the probability or improbability of their testimony, their interest or want of interest, and also their personal credibility so far as the same may legitimately appear upon the trial. The court may also consider the number of witnesses, though the preponderance is not necessarily with the greater number. (1a)" },
+      "133:2": { title: "Proof beyond reasonable doubt", text: "Section 2. Proof beyond reasonable doubt. — In a criminal case, the accused is entitled to an acquittal, unless his or her guilt is shown beyond reasonable doubt. Proof beyond reasonable doubt does not mean such a degree of proof as, excluding possibility of error, produces absolute certainty. Moral certainty only is required, or that degree of proof which produces conviction in an unprejudiced mind. (2a)" },
+      "133:3": { title: "Extrajudicial confession, not sufficient ground for conviction", text: "Section 3. Extrajudicial confession, not sufficient ground for conviction. — An extrajudicial confession made by an accused shall not be a sufficient ground for conviction, unless corroborated by evidence of corpus delicti. (3)" },
+      "133:4": { title: "Circumstantial evidence, when sufficient", text: "Section 4. Circumstantial evidence, when sufficient. — Circumstantial evidence is sufficient for conviction if:\n(a) There is more than one circumstance;\n(b) The facts from which the inferences are derived are proven; and\n(c) The combination of all the circumstances is such as to produce a conviction beyond reasonable doubt.\nInferences cannot be based on other inferences. (4a)" },
+      "133:5": { title: "Weight to be given opinion of expert witness, how determined", text: "Section 5. Weight to be given opinion of expert witness, how determined. — In any case where the opinion of an expert witness is received in evidence, the court has a wide latitude of discretion in determining the weight to be given to such opinion, and for that purpose may consider the following:\n(a) Whether the opinion is based upon sufficient facts or data;\n(b) Whether it is the product of reliable principles and methods;\n(c) Whether the witness has applied the principles and methods reliably to the facts of the case;\n(d) In the case of scientific opinion, the testability of the opinion, whether it was subjected to peer review and publication, the known or potential rate of error, and the general acceptance of the theory, technique, or method in the relevant scientific community; and\n(e) The witness's qualification, experience, and the extent of his or her specialized knowledge. (n)" },
+      "133:6": { title: "Substantial evidence", text: "Section 6. Substantial evidence. — In cases filed before administrative or quasi-judicial bodies, a fact may be deemed established if it is supported by substantial evidence, or that amount of relevant evidence which a reasonable mind might accept as adequate to justify a conclusion. (5)" },
+      "133:7": { title: "Power of the court to stop further evidence", text: "Section 7. Power of the court to stop further evidence. — The court may stop the introduction of further testimony upon any particular point when the evidence upon it is already so full that more witnesses to the same point cannot be reasonably expected to be additionally persuasive. But this power should be exercised with caution. (6)" },
+      "133:8": { title: "Evidence on motion", text: "Section 8. Evidence on motion. — When a motion is based on facts not appearing of record the court may hear the matter on affidavits or depositions presented by the respective parties, but the court may direct that the matter be heard wholly or partly on oral testimony or depositions. (7)" }
+    };
+
+    // ---------------------------------------------------------------------------
+    // UNIVERSAL MULTI-SUBJECT CANONICAL STATUTORY REGISTRY
+    // ---------------------------------------------------------------------------
+    const UNIVERSAL_SUBJECT_CODAL_REGISTRY = {
+      "Civil Law": {
+        "1156": { title: "Obligation defined", text: "Article 1156. An obligation is a juridical necessity to give, to do or not to do." },
+        "1157": { title: "Sources of obligations", text: "Article 1157. Obligations arise from: (1) Law; (2) Contracts; (3) Quasi-contracts; (4) Acts or omissions punished by law; and (5) Quasi-delicts." },
+        "1170": { title: "Breach of obligations (Fraud, Negligence, Delay)", text: "Article 1170. Those who in the performance of their obligations are guilty of fraud, negligence, or delay, and those who in any manner contravene the tenor thereof, are liable for damages." },
+        "1174": { title: "Fortuitous event", text: "Article 1174. Except in cases expressly specified by the law, or when it is otherwise declared by stipulation, or when the nature of the obligation requires the assumption of risk, no person shall be responsible for those events which could not be foreseen, or which, though foreseen, were inevitable." },
+        "1191": { title: "Tacit resolutory condition / Rescission in reciprocal obligations", text: "Article 1191. The power to rescind obligations is implied in reciprocal ones, in case one of the obligors should not comply with what is incumbent upon him. The injured party may choose between the fulfillment and the rescission of the obligation, with the payment of damages in either case." },
+        "1305": { title: "Contract defined", text: "Article 1305. A contract is a meeting of minds between two persons whereby one binds himself, with respect to the other, to give something or to render some service." },
+        "1318": { title: "Essential requisites of contracts", text: "Article 1318. There is no contract unless the following requisites concur: (1) Consent of the contracting parties; (2) Object certain which is the subject matter of the contract; (3) Cause of the obligation which is established." },
+        "FC:35": { title: "Void marriages", text: "Family Code Art. 35. The following marriages shall be void from the beginning: (1) Contracted by any party below 18 years of age even with parental consent; (2) Solemnized by unauthorized officer; (3) Solemnized without license; (4) Bigamous or polygamous; (5) Mistake as to identity; (6) Subsequent marriages void under Art. 53." },
+        "FC:36": { title: "Psychological incapacity", text: "Family Code Art. 36. A marriage contracted by any party who, at the time of the celebration, was psychologically incapacitated to comply with the essential marital obligations of marriage, shall likewise be void even if such incapacity becomes manifest only after its solemnization. (Governed En Banc by Tan-Andal v. Andal, G.R. No. 196359, recognizing it as a legal, not medical concept)." }
+      },
+      "Criminal Law": {
+        "11": { title: "Justifying circumstances", text: "Article 11. Justifying circumstances. — The following do not incur any criminal liability: (1) Self-defense (Requisites: Unlawful aggression, reasonable necessity of means employed, lack of sufficient provocation); (2) Defense of relatives; (3) Defense of strangers; (4) Avoidance of greater evil or injury; (5) Fulfillment of duty or lawful exercise of right/office; (6) Obedience to an order issued by a superior for some lawful purpose." },
+        "12": { title: "Exempting circumstances", text: "Article 12. Circumstances which exempt from criminal liability. — The following are exempt: (1) An imbecile or an insane person; (2) A person under 15 years of age (R.A. 9344 as amended); (3) A person over 15 and under 18 unless acted with discernment; (4) Performing a lawful act with due care causing injury by mere accident; (5) Compulsion of an irresistible force; (6) Impulse of an uncontrollable fear; (7) Prevented by some lawful or insuperable cause." },
+        "14": { title: "Aggravating circumstances", text: "Article 14. Aggravating circumstances. — The following are aggravating circumstances: (1) That advantage be taken by the offender of his public position; (2) In contempt of or with insult to the public authorities; (3) With insult or in disregard of respect due the offended party on account of rank, age, or sex, or committed in dwelling; (14) With evident premeditation; (15) With craft, fraud, or disguise; (16) With treachery (alevosia); (17) With ignominy; (21) With cruelty." },
+        "248": { title: "Murder", text: "Article 248. Murder. — Any person who, not falling within the provisions of Article 246 (Parricide), shall kill another, shall be guilty of murder and punished by reclusion perpetua, if committed with any of the following attendant circumstances: (1) Treachery, taking advantage of superior strength, with aid of armed men, or employing means to weaken defense; (2) In consideration of price, reward, or promise; (3) By means of inundation, fire, poison, explosion, or derailment; (4) On occasion of calamities; (5) With evident premeditation; (6) With cruelty or outraging corpse." },
+        "266-A": { title: "Rape (Amended by R.A. 11648)", text: "Article 266-A. Rape. — Rape is committed: (1) By a man who shall have carnal knowledge of another person through force, threat, or intimidation; or when the offended party is deprived of reason or unconscious; or by fraudulent machination; or (2) When the offended party is under 16 years of age (R.A. 11648 statutory rape threshold, subject to close-in-age exemption under Sec. 2)." }
+      },
+      "Labor Law": {
+        "297": { title: "Termination by employer (Just causes)", text: "Article 297 [279]. Termination by employer. — An employer may terminate an employment for any of the following just causes: (a) Serious misconduct or willful disobedience by the employee of the lawful orders of his employer or representative in connection with his work; (b) Gross and habitual neglect by the employee of his duties; (c) Fraud or willful breach by the employee of the trust reposed in him by his employer or duly authorized representative; (d) Commission of a crime or offense by the employee against the person of his employer or any immediate member of his family or duly authorized representatives; and (e) Other causes analogous to the foregoing." },
+        "298": { title: "Closure of establishment and reduction of personnel (Authorized causes)", text: "Article 298 [280]. Authorized causes. — The employer may also terminate the employment of any employee due to: (1) The installation of labor-saving devices; (2) Redundancy; (3) Retrenchment to prevent losses; or (4) The closing or cessation of operation of the establishment or undertaking, unless the closing is for the purpose of circumventing the provisions of this Title." }
+      },
+      "Legal Ethics": {
+        "CPRA:2": { title: "Canon II: Propriety", text: "A lawyer shall, at all times, act with propriety and maintain the appearance of propriety in personal and professional dealings, observing dignity, respect, and fairness." },
+        "CPRA:3": { title: "Canon III: Fidelity", text: "Fidelity pertains to a lawyer's duty to preserve the client's confidences, avoid conflicts of interest, and account for all money and property received from the client with scrupulous fidelity." }
+      }
     };
 // ---------------------------------------------------------------------------
     // SPECIAL RULES & ADMINISTRATIVE CIRCULARS TOPIC REGISTRY
@@ -1661,6 +1973,12 @@
         .replace(/[ \t]+/g, ' ')
         .trim();
 
+      // PHASE 4: PRE-PARSE CLOZE DELETIONS {{c1::phrase::hint}} -> SAFE TOKENS
+      text = text.replace(/\{\{c(\d+)::(.*?)(?:::([^}]+))?\}\}/g, (match, cNum, answer, hint) => {
+        const hintPart = hint ? `::${hint.trim()}` : '';
+        return `§§CLOZE_${cNum}_${answer.trim()}${hintPart}§§`;
+      });
+
       text = text.replace(/(\d{4}[A-Za-z0-9,.\s]*?)\s+(?:■\s*)?(Doctrine|Facts|Issues?|Ruling)\b/gi, '$1\n\n$2: ');
 
       text = text.replace(
@@ -1758,6 +2076,13 @@
             /^((?:Rule|Section|Sec\.|Article|Art\.)\s+\d+[A-Za-z0-9().-]*\s*[.—:-]?)/i,
             '<span class="text-amber-300 font-mono font-bold">$1</span>'
           );
+
+          // PHASE 4: RENDER CLOZE BADGES WITH OPTIONAL HINT
+          escaped = escaped.replace(/§§CLOZE_(\d+)_(.*?)(?:::([^§]+))?§§/g, (m, cNum, answer, hint) => {
+            const hintHtml = hint ? `<span class="text-[10px] text-amber-400 font-mono italic ml-1">(${hint})</span>` : '';
+            return `<span class="inline-flex items-center px-2 py-0.5 mx-0.5 rounded bg-amber-950/80 border border-amber-600/70 text-amber-200 font-mono text-xs font-semibold shadow-sm" title="Cloze [c${cNum}]"><span class="text-amber-500 font-bold mr-1">c${cNum}:</span>${answer}${hintHtml}</span>`;
+          });
+
           if (/^(?:Q:|A:|Court:|WITNESS:|FISCAL:)/i.test(escaped)) {
             finalHtml.push(`<div class="pl-3 py-1 border-l-2 border-slate-700 text-slate-300 font-mono text-xs">${escaped}</div>`);
           } else {
@@ -2007,6 +2332,7 @@
 
       await refreshMasteryStatsUI();
       await renderDeckListUI();
+      
 
       state.loadedFiles = await dbGetAll('sources');
       state.parsedDigests = await dbGetAll('digests');
@@ -2583,14 +2909,18 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
     }
 
     function retrieveVerbatimProvision(queryText) {
-      const targetSecNum = extractSectionNumberToken(queryText);
-      const targetRuleNum = extractRuleNumberToken(queryText) || "130";
+      const q = queryText || "";
+      const lowerQuery = q.toLowerCase();
+
+      // 1. Evidence & Rules of Court check (Rules 128 through 133)
+      const targetSecNum = extractSectionNumberToken(q);
+      const targetRuleNum = extractRuleNumberToken(q) || (lowerQuery.includes('rule 133') ? "133" : (lowerQuery.includes('rule 129') ? "129" : (lowerQuery.includes('rule 128') ? "128" : "130")));
 
       if (targetSecNum && CANONICAL_2019_CODAL_MAP[`${targetRuleNum}:${targetSecNum}`]) {
         return CANONICAL_2019_CODAL_MAP[`${targetRuleNum}:${targetSecNum}`].text;
       }
 
-      const lowerQuery = (queryText || "").toLowerCase();
+      // Concordance lookup
       for (const [key, val] of Object.entries(EVIDENCE_2019_CONCORDANCE)) {
         if (lowerQuery.includes(key)) {
           const rNum = extractRuleNumberToken(val.rule) || "130";
@@ -2601,6 +2931,23 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
         }
       }
 
+      // 2. Multi-Subject Registry Check (Civil, Criminal, Labor, Ethics, Commercial, Tax)
+      const subjectMap = UNIVERSAL_SUBJECT_CODAL_REGISTRY[currentSubjectName];
+      if (subjectMap) {
+        // Match Article numbers: e.g. "Article 1156", "Art. 11", "Art 297"
+        const artMatch = q.match(/\b(?:Articles?|Arts?\.?|Sections?|Secs?\.?)\s*(\d{1,4}[A-Za-z-]*)\b/i);
+        if (artMatch && artMatch[1]) {
+          const artKey = artMatch[1];
+          if (subjectMap[artKey]) return subjectMap[artKey].text;
+        }
+        for (const [key, entry] of Object.entries(subjectMap)) {
+          if (lowerQuery.includes(entry.title.toLowerCase()) || lowerQuery.includes(key.toLowerCase())) {
+            return entry.text;
+          }
+        }
+      }
+
+      // 3. Fallback to loaded PDF commentary/source chunks
       if (inMemoryChunks.length > 0 && targetSecNum) {
         const matches = inMemoryChunks.filter(c =>
           c.isStatutoryHeader &&
@@ -3706,29 +4053,34 @@ Subject: ${currentSubjectName}
 Provision / Topic: ${cleanTopicName} (${item.rule_citation || ''})
 Active Dimension: ${dimObj.label}
 
-[STATUTORY & SOURCE EXCERPTS]:
-${excerpts || "Rely strictly on the 2019 Revised Rules on Evidence and Philippine Supreme Court jurisprudence."}
+${verbatim ? `[VERBATIM CANONICAL STATUTORY BENCHMARK]:\n${verbatim}\n` : ''}
+${excerpts ? `[SOURCE EXCERPTS]:\n${excerpts}\n` : ''}
 
 ${atomicDirective}
 
-BENCHMARK BREAKDOWN FORMATTING MANDATE:
-1. operative_rule_summary: State the exact verbatim codal provision and core rule.
-2. elements_requisites: Enumerate all mandatory requisites strictly using numbered markers: (1), (2), (3), (4)...
-3. statutory_exceptions: Enumerate all express statutory exceptions, negative qualifications, or provisos in the Rules of Court using numbered markers: (1), (2), (3)... (If none are express in the statute, state the negative statutory boundaries).
-4. jurisprudential_exceptions: Enumerate controlling Supreme Court doctrinal exceptions, qualifications, or distinctions (e.g., Independently Relevant Statements, ante litem motam exceptions, relaxed aliunde rule in Tison, waiver by failure to object in Malayan Insurance, etc.) using numbered markers: (1), (2)...
-5. application_ratio: Explain the policy ratio behind the rule and its exceptions.`
+CRITICAL ANTI-TRUNCATION MANDATE (PHASE 6):
+1. In operative_rule_summary: State the complete operative statutory provision. If the rule contains enumerated factors or subsections (such as Rule 133 Sec. 5 factors [a] through [e]), YOU MUST STATE ALL FACTORS IN FULL. NEVER cut off sentences with colons (:), dashes (-), or "for that purpose may consider the following:".
+2. In elements_requisites: Enumerate all mandatory requisites strictly using numbered markers: (1), (2), (3)...
+3. In statutory_exceptions: Enumerate all express statutory exceptions or provisos using numbered markers: (1), (2)...
+4. In jurisprudential_exceptions: Enumerate controlling Supreme Court doctrinal exceptions or qualifications.
+5. In application_ratio: Explain the complete policy ratio behind the rule.`
           }]
         }];
 
-        const rawJson = await callGemini(prompt, "You are a Philippine Bar Examiner formulating atomic codal recitation cards.", codalSchema);
+        const rawJson = await callGemini(prompt, "You are an authoritative Philippine Bar Examiner formulating complete, non-truncated codal benchmarks.", codalSchema);
         const parsed = parseAIJson(rawJson);
-        parsed.codal_provision_text = verbatim || parsed.benchmark_codal_breakdown.operative_rule_summary;
+
+        // Auto-heal truncation using local canonical registry if AI cut off mid-list
+        parsed.codal_provision_text = verbatim || healTruncatedStatutoryText(parsed.benchmark_codal_breakdown.operative_rule_summary, cleanTopicName);
+        parsed.benchmark_codal_breakdown.operative_rule_summary = healTruncatedStatutoryText(parsed.benchmark_codal_breakdown.operative_rule_summary, cleanTopicName);
         return parsed;
       }
 
-      // 4. REVIEWER, DISTINCTIONS, HYPOTHETICALS & REMEDIES (DIMENSIONS 4, 9, 10)
+      // 4. REVIEWER, DISTINCTIONS, HYPOTHETICALS & REMEDIES (DIMENSIONS 4, 9, 10 — STRICT 4-PART ALAC)
       const cleanTopicName = item.baseTopic || item.topic;
       const excerpts = retrieveRelevantExcerpts(`${cleanTopicName} ${item.rule_citation}`, 3200);
+      const verbatimBasis = retrieveVerbatimProvision(`${cleanTopicName} ${item.rule_citation}`);
+
       const alacSchema = {
         type: "OBJECT",
         properties: {
@@ -3751,9 +4103,9 @@ BENCHMARK BREAKDOWN FORMATTING MANDATE:
       if (dimObj.id === 4) {
         reviewerDirective = `Demand a structured point-by-point doctrinal distinction contrasting "${cleanTopicName}" with its closest legal counterpart under Philippine law. In p3_analysis, write structured comparative paragraphs (DO NOT use Markdown tables).`;
       } else if (dimObj.id === 9) {
-        reviewerDirective = `Present a realistic Philippine Bar Examination fact pattern testing "${cleanTopicName}" (${item.rule_citation || ''}) and require a 4-part ALAC ruling on the objection or controversy.`;
+        reviewerDirective = `Present a realistic Philippine Bar Examination problem scenario testing "${cleanTopicName}" (${item.rule_citation || ''}). Require a comprehensive 4-part ALAC resolution.`;
       } else {
-        reviewerDirective = `Interrogate strictly on the proper procedural remedy, foundational predicate, time of objection, waiver effect, or jurisdictional bar governing "${cleanTopicName}" (${item.rule_citation || ''}).`;
+        reviewerDirective = `Interrogate strictly on the proper procedural remedy, vehicle, prescriptive period, waiver effect, or jurisdictional bar governing "${cleanTopicName}" (${item.rule_citation || ''}).`;
       }
 
       const prompt = [{
@@ -3764,17 +4116,30 @@ Subject: ${currentSubjectName}
 Topic / Precedent: ${cleanTopicName} (${item.rule_citation || ''})
 Active Dimension: ${dimObj.label}
 
-[SOURCE EXCERPTS]:
-${excerpts || "Rely strictly on codified Philippine law and Supreme Court jurisprudence."}
+${verbatimBasis ? `[VERBATIM CANONICAL STATUTE FOR LEGAL BASIS]:\n${verbatimBasis}\n` : ''}
+${excerpts ? `[SOURCE EXCERPTS]:\n${excerpts}\n` : ''}
 
-MANDATORY DIRECTIVE:
+MANDATORY DIRECTIVES:
 1. ${reviewerDirective}
-2. Provide a complete 4-part benchmark_alac.`
+
+STRICT 4-PART ALAC INTEGRITY STANDARD (PHASE 6):
+In benchmark_alac:
+- p1_direct_answer: EXACTLY ONE unequivocal, categorical ruling sentence answering the call directly (e.g., "No, the plaintiff's objection is not meritorious.", "Yes, the motion to quash must be granted.", "The accused is liable for Murder.").
+- p2_legal_basis: MUST state the exact governing legal citation (statute, rule number, or landmark precedent) AND recite the full substantive legal rule/elements/test. 
+  *** STRICT PROHIBITION: A bare citation line (e.g. 'Rule 133, Section 7 of the Rules on Evidence' or 'Article 1156 of the Civil Code') WITHOUT reciting the operative rule itself is STRICTLY FORBIDDEN. You must recite the governing rule (e.g., 'Under Rule 133, Section 7 of the 2019 Revised Rules on Evidence, the court may stop the introduction of further testimony upon any particular point when the evidence upon it is already so full that more witnesses to the same point cannot be reasonably expected to be additionally persuasive. But this power should be exercised with caution.'). ***
+- p3_analysis: Systematically pair the operative facts of the problem scenario with each requisite of the legal basis.
+- p4_conclusion: A definitive final concluding sentence that directly disposes of the controversy.`
         }]
       }];
 
-      const rawJson = await callGemini(prompt, `You are a Philippine Bar Examiner in ${currentSubjectName}.`, alacSchema);
-      return parseAIJson(rawJson);
+      const rawJson = await callGemini(prompt, `You are a Philippine Bar Examiner in ${currentSubjectName} enforcing strict 4-part ALAC compliance.`, alacSchema);
+      const parsed = parseAIJson(rawJson);
+
+      // Auto-heal ALAC Legal Basis if AI omitted the substantive rule text
+      if (parsed.benchmark_alac && parsed.benchmark_alac.p2_legal_basis) {
+        parsed.benchmark_alac.p2_legal_basis = healTruncatedAlacBasis(parsed.benchmark_alac.p2_legal_basis, verbatimBasis || cleanTopicName);
+      }
+      return parsed;
     }
 
     // ---------------------------------------------------------------------------
@@ -4657,40 +5022,74 @@ function extractCardParagraphsForExport(c) {
       decks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       decks.forEach(deck => {
+        const totalCards = deck.cards ? deck.cards.length : 0;
+        const activeCards = (deck.cards || []).filter(c => !c.isSuspended && !isCardBuriedToday(c)).length;
+        const suspendedCards = (deck.cards || []).filter(c => c.isSuspended).length;
+        const buriedCards = (deck.cards || []).filter(c => isCardBuriedToday(c)).length;
+
         const div = document.createElement('div');
         div.className = "flex flex-col bg-slate-950 border border-slate-800 p-3 rounded-xl hover:border-slate-700 transition gap-2 shadow-sm";
         div.innerHTML = `
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
-              <span class="font-bold text-slate-100 text-sm block truncate cursor-pointer hover:text-amber-300" onclick="renameDeckPrompt('${deck.id}')" title="Click to Rename">
+              <span class="font-bold text-slate-100 text-sm block truncate cursor-pointer hover:text-amber-300" onclick="renameDeckPrompt('${deck.id}')" title="Click to rename this deck">
                 ${escapeHtml(deck.title)}
               </span>
               <span class="text-[10px] text-slate-500 font-mono block mt-0.5">
-                Created: ${new Date(deck.createdAt).toLocaleDateString()} · Subject: <b class="text-amber-400/90">${escapeHtml(deck.subject || currentSubjectName)}</b>
+                Created: ${new Date(deck.createdAt).toLocaleDateString()} · Active: <b class="text-emerald-400">${activeCards}</b> / ${totalCards} cards
+                ${suspendedCards > 0 ? `· <span class="text-red-400 font-bold" title="Temporarily removed from recitation queues without deleting">${suspendedCards} Suspended</span>` : ''}
+                ${buriedCards > 0 ? `· <span class="text-amber-400 font-bold" title="Hidden from today's drills; automatically returns tomorrow">${buriedCards} Buried</span>` : ''}
               </span>
             </div>
             <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-800/70 font-bold shrink-0 whitespace-nowrap">
-              ${deck.cards.length} Cards
+              ${totalCards} Cards
             </span>
           </div>
 
           <div class="flex items-center flex-wrap gap-1.5 pt-1.5 border-t border-slate-900">
-            <button onclick="launchSavedDeck('${deck.id}')" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded font-mono text-[11px] transition shadow">
-              Launch
+            <!-- LAUNCH -->
+            <button onclick="launchSavedDeck('${deck.id}')" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded font-mono text-[11px] transition shadow" title="Launch an oral recitation drill with this deck">
+              Launch (${activeCards})
             </button>
-            <button onclick="exportDeckAsMarkdownStudySheet('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/60 rounded font-mono text-[11px] transition">
-              Export (.md)
+            
+            <!-- VIEW CARDS -->
+            <button onclick="openDeckBrowserModal('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/60 rounded font-mono text-[11px] transition font-bold" title="Inspect, search, view benchmarks, duplicate, suspend, or delete individual cards in this deck">
+              🗂 View Cards (${totalCards})
             </button>
-            <button onclick="exportDeckAsWordDoc('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-800/60 rounded font-mono text-[11px] transition">
-              Export (.doc)
+
+            <!-- ADD CARD DIRECTLY TO THIS DECK -->
+            <button onclick="openStudioForSpecificDeck('${deck.id}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-800/60 rounded font-mono text-[11px] transition font-semibold" title="Add a custom card directly into this deck">
+              + Add Card
             </button>
-            <button onclick="exportSingleDeckJSON('${deck.id}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-800/60 rounded font-mono text-[11px] transition">
+            
+            <!-- DUPLICATE DECK -->
+            <button onclick="duplicateSavedDeck('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded font-mono text-[11px] transition font-semibold" title="Creates an independent working copy of this deck so you can customize cards without altering the original">
+              ⎘ Duplicate
+            </button>
+
+            <!-- MERGE DECKS -->
+            <button onclick="promptMergeDecks('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-800/60 rounded font-mono text-[11px] transition font-semibold" title="Combines cards from another deck into this deck while keeping the source deck intact">
+              ⚗ Merge
+            </button>
+
+            <!-- EXPORT WORD / MD / JSON -->
+            <button onclick="exportDeckAsMarkdownStudySheet('${deck.id}')" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded font-mono text-[10px] transition" title="Export this deck as an Obsidian/Markdown study sheet">
+              .md
+            </button>
+            <button onclick="exportDeckAsWordDoc('${deck.id}')" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded font-mono text-[10px] transition" title="Export this deck as a formatted Microsoft Word study sheet">
+              .doc
+            </button>
+            <button onclick="exportSingleDeckJSON('${deck.id}')" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-slate-800 rounded font-mono text-[10px] transition" title="Export this deck as a shareable JSON file">
               JSON
             </button>
-            <button onclick="renameDeckPrompt('${deck.id}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono text-[11px] transition">
+
+            <!-- RENAME -->
+            <button onclick="renameDeckPrompt('${deck.id}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono text-[11px] transition" title="Rename this deck">
               Rename
             </button>
-            <button onclick="deleteSavedDeck('${deck.id}')" class="px-2 py-1 bg-slate-800 hover:bg-red-950 text-red-400 rounded font-mono text-[11px] ml-auto transition">
+
+            <!-- DELETE DECK -->
+            <button onclick="deleteSavedDeck('${deck.id}')" class="px-2 py-1 bg-slate-800 hover:bg-red-950 text-red-400 rounded font-mono text-[11px] ml-auto transition" title="Permanently delete this entire deck">
               ✕
             </button>
           </div>
@@ -4703,10 +5102,17 @@ function extractCardParagraphsForExport(c) {
       const deck = await dbGet('decks', deckId);
       if (!deck || !deck.cards || deck.cards.length === 0) return;
 
+      // Filter out cards that are permanently suspended or temporarily buried for today
+      const playableCards = deck.cards.filter(c => !c.isSuspended && !isCardBuriedToday(c));
+      if (playableCards.length === 0) {
+        alert(`Cannot launch "${deck.title}": All ${deck.cards.length} cards are currently suspended or buried. Unsuspend or unbury cards to practice.`);
+        return;
+      }
+
       await requestScreenWakeLock();
       state.isSessionActive = true;
       const shouldShuffle = document.getElementById('shuffleDeckCheckbox')?.checked;
-      state.activeAgenda = shouldShuffle ? shuffleArray(deck.cards) : [...deck.cards];
+      state.activeAgenda = shouldShuffle ? shuffleArray(playableCards) : [...playableCards];
       state.activeDeckCardsPool = [...deck.cards];
       state.totalQuestions = state.activeAgenda.length;
       state.currentQuestionIndex = 1;
@@ -5997,8 +6403,8 @@ function extractCardParagraphsForExport(c) {
       if (format === 'doc') exportCardsAsDoc(activeCards);
     }
 
-    // 1. Export as JSON
-    async function exportCardsAsJSON(cardsArray) {
+// 1. Export as JSON
+async function exportCardsAsJSON(cardsArray) {
       if (!cardsArray || cardsArray.length === 0) {
         alert("No flashcards found to export.");
         return;
@@ -6052,8 +6458,8 @@ function extractCardParagraphsForExport(c) {
       );
     }
 
-    // 3. Export as Microsoft Word Document (.doc)
-    async function exportCardsAsDoc(cardsArray) {
+// 3. Export as Microsoft Word Document (.doc)
+async function exportCardsAsDoc(cardsArray) {
       if (!cardsArray || cardsArray.length === 0) {
         alert("No flashcards found to export.");
         return;
@@ -6103,6 +6509,1002 @@ function extractCardParagraphsForExport(c) {
         'Microsoft Word Document',
         '.doc'
       );
+    }
+
+    // =========================================================================
+    // PHASE 1: CORE CARD LIFECYCLE, SUSPENSION, BURY & DECK UTILITIES
+    // =========================================================================
+    function isCardBuriedToday(card) {
+      if (!card || !card.buriedUntil) return false;
+      return new Date(card.buriedUntil).getTime() > Date.now();
+    }
+
+    async function toggleCardSuspension(deckId, cardIndex) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards || !deck.cards[cardIndex]) return;
+
+      const card = deck.cards[cardIndex];
+      card.isSuspended = !card.isSuspended;
+
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      if (typeof renderBrowserCardsList === 'function' && currentBrowsingDeckId === deckId) {
+        renderBrowserCardsList();
+      }
+    }
+
+    async function toggleCardBuryToday(deckId, cardIndex) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards || !deck.cards[cardIndex]) return;
+
+      const card = deck.cards[cardIndex];
+      if (isCardBuriedToday(card)) {
+        delete card.buriedUntil;
+      } else {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(4, 0, 0, 0);
+        card.buriedUntil = tomorrow.toISOString();
+      }
+
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      if (typeof renderBrowserCardsList === 'function' && currentBrowsingDeckId === deckId) {
+        renderBrowserCardsList();
+      }
+    }
+
+    async function deleteCardFromDeck(deckId, cardIndex) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards || !deck.cards[cardIndex]) return;
+
+      const topicLabel = deck.cards[cardIndex].topic || `Card ${cardIndex + 1}`;
+      if (!confirm(`Delete card "${topicLabel}" from "${deck.title}"?`)) return;
+
+      deck.cards.splice(cardIndex, 1);
+
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      if (typeof renderBrowserCardsList === 'function' && currentBrowsingDeckId === deckId) {
+        renderBrowserCardsList();
+      }
+    }
+
+    async function duplicateCardInDeck(deckId, cardIndex) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards || !deck.cards[cardIndex]) return;
+
+      const source = deck.cards[cardIndex];
+      const cloned = JSON.parse(JSON.stringify(source));
+      cloned.id = 'card_copy_' + Date.now();
+      cloned.topic = `${source.topic || 'Card'} (Copy)`;
+      delete cloned.isSuspended;
+      delete cloned.buriedUntil;
+
+      deck.cards.splice(cardIndex + 1, 0, cloned);
+
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      if (typeof renderBrowserCardsList === 'function' && currentBrowsingDeckId === deckId) {
+        renderBrowserCardsList();
+      }
+    }
+
+    async function bulkUnsuspendDeck(deckId) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards) return;
+
+      deck.cards.forEach(c => { delete c.isSuspended; });
+
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      if (typeof renderBrowserCardsList === 'function' && currentBrowsingDeckId === deckId) {
+        renderBrowserCardsList();
+      }
+    }
+
+    async function bulkUnburyDeck(deckId) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards) return;
+
+      deck.cards.forEach(c => { delete c.buriedUntil; });
+
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      if (typeof renderBrowserCardsList === 'function' && currentBrowsingDeckId === deckId) {
+        renderBrowserCardsList();
+      }
+    }
+
+    async function duplicateSavedDeck(deckId) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck) return;
+
+      const defaultName = `${deck.title} (Copy)`;
+      const title = prompt("Enter a title for the duplicated deck:", defaultName);
+      if (!title || !title.trim()) return;
+
+      const newDeck = {
+        id: 'deck_' + Date.now(),
+        subject: deck.subject || currentSubjectName,
+        title: title.trim(),
+        createdAt: new Date().toISOString(),
+        cards: JSON.parse(JSON.stringify(deck.cards || []))
+      };
+
+      await dbSave('decks', newDeck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      alert(`Success! Created independent copy: "${newDeck.title}" (${newDeck.cards.length} cards).`);
+    }
+
+    async function promptMergeDecks(targetDeckId) {
+      const decks = await dbGetAll('decks');
+      const targetDeck = decks.find(d => d.id === targetDeckId);
+      if (!targetDeck) return;
+
+      const availableSources = decks.filter(d => d.id !== targetDeckId);
+      if (availableSources.length === 0) {
+        alert("No other decks in this subject workspace to merge.");
+        return;
+      }
+
+      let listStr = `Select a deck to merge INTO "${targetDeck.title}":\n(Note: The source deck will remain intact)\n\n`;
+      availableSources.forEach((d, idx) => {
+        listStr += `${idx + 1}. ${d.title} (${d.cards ? d.cards.length : 0} cards)\n`;
+      });
+      listStr += `\nEnter the number of the source deck:`;
+
+      const input = prompt(listStr);
+      if (!input) return;
+
+      const selectedIdx = parseInt(input.trim(), 10) - 1;
+      if (isNaN(selectedIdx) || selectedIdx < 0 || selectedIdx >= availableSources.length) {
+        alert("Invalid selection.");
+        return;
+      }
+
+      const sourceDeck = availableSources[selectedIdx];
+      const incomingCards = JSON.parse(JSON.stringify(sourceDeck.cards || []));
+
+      if (!targetDeck.cards) targetDeck.cards = [];
+      targetDeck.cards.push(...incomingCards);
+
+      await dbSave('decks', targetDeck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      alert(`Merged ${incomingCards.length} cards from "${sourceDeck.title}" into "${targetDeck.title}". Total cards: ${targetDeck.cards.length}.`);
+    }
+
+    // =========================================================================
+    // PHASE 2: DECK CARD BROWSER & INSPECTOR CONTROLLER
+    // =========================================================================
+    let currentBrowsingDeckId = null;
+    let browserStateFilter = 'ALL';
+
+    async function openDeckBrowserModal(deckId) {
+      currentBrowsingDeckId = deckId;
+      browserStateFilter = 'ALL';
+      const searchInput = document.getElementById('browserSearchInput');
+      if (searchInput) searchInput.value = '';
+
+      setBrowserStateFilter('ALL', true);
+      document.getElementById('deckBrowserModal')?.classList.remove('hidden');
+      await renderBrowserCardsList();
+    }
+
+    function closeDeckBrowserModal() {
+      currentBrowsingDeckId = null;
+      document.getElementById('deckBrowserModal')?.classList.add('hidden');
+    }
+
+    function setBrowserStateFilter(filterKey, skipRender = false) {
+      browserStateFilter = filterKey;
+      ['ALL', 'ACTIVE', 'SUSPENDED', 'BURIED', 'DEFICIENT'].forEach(k => {
+        const btn = document.getElementById('filterBtn_' + k);
+        if (!btn) return;
+        if (k === filterKey) {
+          btn.className = "px-2.5 py-1 rounded bg-amber-600 text-slate-950 font-bold transition";
+        } else {
+          btn.className = "px-2.5 py-1 rounded text-slate-400 hover:text-slate-200 transition";
+        }
+      });
+      if (!skipRender) {
+        filterBrowserCardRows();
+      }
+    }
+
+    async function renderBrowserCardsList() {
+      if (!currentBrowsingDeckId) return;
+      const deck = await dbGet('decks', currentBrowsingDeckId);
+      const container = document.getElementById('browserCardsContainer');
+      const titleEl = document.getElementById('browserDeckTitle');
+      const countBadge = document.getElementById('browserDeckCountBadge');
+      if (!container || !deck) return;
+
+      if (titleEl) titleEl.innerText = deck.title;
+      const cards = deck.cards || [];
+      if (countBadge) countBadge.innerText = `${cards.length} Cards`;
+
+      const masteryRecords = await dbGetAll('mastery');
+      const deficientKeys = new Set(
+        masteryRecords
+          .filter(m => m.status === 'CRITICAL_DRILL' || m.score < 0)
+          .map(m => (m.topic || '').trim().toLowerCase())
+      );
+
+      let countActive = 0, countSuspended = 0, countBuried = 0, countDeficient = 0;
+      cards.forEach(c => {
+        const isSusp = Boolean(c.isSuspended);
+        const isBur = isCardBuriedToday(c);
+        const cardTopicKey = (c.topic || c.case_title || '').trim().toLowerCase();
+        const isDef = deficientKeys.has(cardTopicKey);
+
+        if (isSusp) countSuspended++;
+        else if (isBur) countBuried++;
+        else countActive++;
+
+        if (isDef) countDeficient++;
+      });
+
+      document.getElementById('count_ALL').innerText = cards.length;
+      document.getElementById('count_ACTIVE').innerText = countActive;
+      document.getElementById('count_SUSPENDED').innerText = countSuspended;
+      document.getElementById('count_BURIED').innerText = countBuried;
+      document.getElementById('count_DEFICIENT').innerText = countDeficient;
+
+      container.innerHTML = '';
+      if (cards.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 text-slate-400 italic">This deck has no cards.</div>`;
+        const summary = document.getElementById('browserFooterSummary');
+        if (summary) summary.innerText = "Showing 0 cards";
+        return;
+      }
+
+      cards.forEach((card, idx) => {
+        const isSusp = Boolean(card.isSuspended);
+        const isBur = isCardBuriedToday(card);
+        const cardTopicKey = (card.topic || card.case_title || '').trim().toLowerCase();
+        const isDef = deficientKeys.has(cardTopicKey);
+
+        let stateBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">● Active</span>`;
+        if (isSusp) stateBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950 text-red-300 border border-red-800" title="Excluded from recitation drills">🚫 Suspended</span>`;
+        else if (isBur) stateBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-800" title="Hidden until tomorrow 4:00 AM">⏸ Buried</span>`;
+        if (isDef) stateBadge += ` <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-800" title="Flagged in Weak-Spot Ledger">⚠️ Deficient</span>`;
+
+        const rowDiv = document.createElement('div');
+        rowDiv.className = "card-row bg-slate-950 border border-slate-800 rounded-xl p-3.5 transition hover:border-slate-700 space-y-2";
+        rowDiv.dataset.index = idx;
+        rowDiv.dataset.state = isSusp ? 'SUSPENDED' : (isBur ? 'BURIED' : 'ACTIVE');
+        rowDiv.dataset.isDeficient = isDef ? 'true' : 'false';
+        rowDiv.dataset.text = `${card.topic || ''} ${card.rule_citation || ''} ${card.question_text || ''}`.toLowerCase();
+
+        const benchmarkParagraphs = extractCardParagraphsForExport(card);
+        const benchmarkContentHtml = benchmarkParagraphs.length > 0
+          ? formatBenchmarkText(benchmarkParagraphs.join('\n\n'))
+          : '<span class="text-slate-500 italic">No structured benchmark attached.</span>';
+
+        rowDiv.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1 cursor-pointer" onclick="toggleCardDetailAccordion(${idx})">
+              <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                <span class="font-mono text-amber-400 font-bold text-xs">#${idx + 1}</span>
+                <span class="font-bold text-slate-100 text-xs truncate max-w-lg hover:text-amber-300 transition">${escapeHtml(card.topic || card.case_title || 'Untitled Card')}</span>
+                <span class="text-[10px] font-mono text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">${escapeHtml(card.exportTag || card.dimension || 'Card')}</span>
+                ${stateBadge}
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1 line-clamp-2 font-sans">${escapeHtml(card.question_text || 'No prompt set.')}</p>
+            </div>
+
+            <div class="flex items-center space-x-1.5 shrink-0">
+              <button onclick="editCardFromBrowser('${deck.id}', ${idx})" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded font-mono text-[11px] transition" title="Edit this card's question, elements, or model answers">
+                ✏️
+              </button>
+              <button onclick="duplicateCardInDeck('${deck.id}', ${idx})" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono text-[11px] transition" title="Clones this card's facts and citations into an independent duplicate">
+                ⎘
+              </button>
+              <button onclick="toggleCardSuspension('${deck.id}', ${idx})" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 ${isSusp ? 'text-emerald-400' : 'text-red-400'} rounded font-mono text-[10px] transition font-bold" title="${isSusp ? 'Restores this card back into your active recitation queue' : 'Temporarily removes this card from all recitation queues without deleting it from your deck or exports'}">
+                ${isSusp ? '✓ Unsuspend' : '🚫 Suspend'}
+              </button>
+              <button onclick="toggleCardBuryToday('${deck.id}', ${idx})" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 ${isBur ? 'text-amber-300' : 'text-slate-400'} rounded font-mono text-[10px] transition font-bold" title="${isBur ? 'Immediately wakes this buried card and places it back into today\'s drills' : 'Hides this card from today\'s drills; it will automatically reappear tomorrow at 4:00 AM'}">
+                ${isBur ? '▶ Unbury' : '⏸ Bury'}
+              </button>
+              <button onclick="deleteCardFromDeck('${deck.id}', ${idx})" class="p-1.5 bg-slate-800 hover:bg-red-950 text-red-400 rounded font-mono text-[11px] transition" title="Permanently delete this card from the deck">
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <div id="cardDetail_${idx}" class="hidden pt-2 border-t border-slate-900 text-xs text-slate-300 space-y-2 bg-slate-900/50 p-3 rounded-lg">
+            <div class="space-y-1">
+              <b class="text-[10px] font-mono uppercase text-amber-400 block tracking-wider">Authoritative Benchmark:</b>
+              <div class="text-slate-200 leading-relaxed">${benchmarkContentHtml}</div>
+            </div>
+            ${card.rule_citation ? `<span class="block text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-800/80">Citation: ${escapeHtml(card.rule_citation)}</span>` : ''}
+          </div>
+        `;
+        container.appendChild(rowDiv);
+      });
+
+      filterBrowserCardRows();
+    }
+
+    function toggleCardDetailAccordion(idx) {
+      const el = document.getElementById(`cardDetail_${idx}`);
+      if (el) el.classList.toggle('hidden');
+    }
+
+    function filterBrowserCardRows() {
+      const query = (document.getElementById('browserSearchInput')?.value || '').toLowerCase().trim();
+      const rows = document.querySelectorAll('.card-row');
+      let visibleCount = 0;
+
+      rows.forEach(r => {
+        const matchesQuery = !query || r.dataset.text.includes(query);
+        let matchesFilter = true;
+
+        if (browserStateFilter === 'ACTIVE') matchesFilter = (r.dataset.state === 'ACTIVE');
+        else if (browserStateFilter === 'SUSPENDED') matchesFilter = (r.dataset.state === 'SUSPENDED');
+        else if (browserStateFilter === 'BURIED') matchesFilter = (r.dataset.state === 'BURIED');
+        else if (browserStateFilter === 'DEFICIENT') matchesFilter = (r.dataset.isDeficient === 'true');
+
+        if (matchesQuery && matchesFilter) {
+          r.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          r.classList.add('hidden');
+        }
+      });
+
+      const summary = document.getElementById('browserFooterSummary');
+      if (summary) summary.innerText = `Showing ${visibleCount} cards`;
+    }
+
+    async function bulkUnsuspendCurrentDeck() {
+      if (!currentBrowsingDeckId) return;
+      await bulkUnsuspendDeck(currentBrowsingDeckId);
+    }
+
+    async function bulkUnburyCurrentDeck() {
+      if (!currentBrowsingDeckId) return;
+      await bulkUnburyDeck(currentBrowsingDeckId);
+    }
+
+    // =========================================================================
+    // PHASE 3 & PHASE 5: CUSTOM CARD STUDIO, BULK INGESTION & IN-PLACE CONTROLLER
+    // =========================================================================
+    let currentCardStudioMode = 'SINGLE';
+    let currentCardArchetype = 'CODAL';
+    let editingCardContext = null;
+
+    function openStudioForSpecificDeck(deckId) {
+      openCardCreatorModal(deckId);
+    }
+
+    async function populateCardStudioDeckSelector(targetDeckId = '__NEW__') {
+      const select = document.getElementById('cardDestinationDeckSelect');
+      const newTitleInput = document.getElementById('newDeckTitleInput');
+      const subBadge = document.getElementById('cardStudioSubjectBadge');
+      if (subBadge) subBadge.innerText = `Subject: ${currentSubjectName}`;
+      if (!select) return;
+
+      const decks = await dbGetAll('decks');
+      select.innerHTML = '<option value="__NEW__">+ Create New Deck...</option>';
+
+      decks.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.innerText = `${d.title} (${d.cards ? d.cards.length : 0} cards)`;
+        if (d.id === targetDeckId) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      if (targetDeckId && targetDeckId !== '__NEW__') {
+        select.value = targetDeckId;
+        newTitleInput?.classList.add('hidden');
+      } else {
+        select.value = '__NEW__';
+        if (newTitleInput) {
+          newTitleInput.classList.remove('hidden');
+          newTitleInput.value = `${currentSubjectName} - Custom Cards (${new Date().toLocaleDateString()})`;
+        }
+      }
+    }
+
+    function onDestinationDeckSelectChanged(val) {
+      const newTitleInput = document.getElementById('newDeckTitleInput');
+      if (val === '__NEW__') newTitleInput?.classList.remove('hidden');
+      else newTitleInput?.classList.add('hidden');
+    }
+
+    function setCardStudioMode(mode) {
+      currentCardStudioMode = mode;
+      const singleBtn = document.getElementById('studioModeSingleBtn');
+      const bulkBtn = document.getElementById('studioModeBulkBtn');
+      const singlePanel = document.getElementById('singleCardStudioPanel');
+      const bulkPanel = document.getElementById('bulkCardStudioPanel');
+      const saveAndAddBtn = document.getElementById('saveAndAddAnotherBtn');
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+
+      if (mode === 'SINGLE') {
+        if (singleBtn) singleBtn.className = "px-3 py-1 rounded text-xs font-mono font-bold transition bg-amber-600 text-slate-950";
+        if (bulkBtn) bulkBtn.className = "px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-slate-200 transition";
+        singlePanel?.classList.remove('hidden');
+        bulkPanel?.classList.add('hidden');
+        saveAndAddBtn?.classList.remove('hidden');
+        if (saveBtn) saveBtn.innerText = editingCardContext ? "Update Card" : "Save Card";
+      } else {
+        if (bulkBtn) bulkBtn.className = "px-3 py-1 rounded text-xs font-mono font-bold transition bg-sky-600 text-slate-950";
+        if (singleBtn) singleBtn.className = "px-3 py-1 rounded text-xs font-mono text-slate-400 hover:text-slate-200 transition";
+        bulkPanel?.classList.remove('hidden');
+        singlePanel?.classList.add('hidden');
+        saveAndAddBtn?.classList.add('hidden');
+        if (saveBtn) saveBtn.innerText = "Import All Rows";
+        previewBulkImportCount();
+      }
+    }
+
+    function setCardArchetype(arch) {
+      currentCardArchetype = arch;
+      const archetypes = ['CODAL', 'CASE', 'ALAC', 'PROCEDURAL', 'SIMPLE'];
+
+      archetypes.forEach(a => {
+        const btn = document.getElementById('archBtn_' + a);
+        if (!btn) return;
+        if (a === arch) {
+          btn.className = "p-2 rounded-lg border border-amber-600 bg-amber-950/40 text-amber-300 font-mono font-bold text-left transition shadow";
+        } else {
+          btn.className = "p-2 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 font-mono font-bold text-left transition";
+        }
+      });
+
+      document.getElementById('archetypeCodalFields')?.classList.add('hidden');
+      document.getElementById('archetypeCaseFields')?.classList.add('hidden');
+      document.getElementById('archetypeAlacFields')?.classList.add('hidden');
+      document.getElementById('archetypeSimpleFields')?.classList.add('hidden');
+
+      const topicLabel = document.getElementById('customTopicLabel');
+
+      if (arch === 'CODAL') {
+        document.getElementById('archetypeCodalFields')?.classList.remove('hidden');
+        if (topicLabel) topicLabel.innerText = "Topic / Provision *";
+      } else if (arch === 'CASE') {
+        document.getElementById('archetypeCaseFields')?.classList.remove('hidden');
+        if (topicLabel) topicLabel.innerText = "Case Title *";
+      } else if (arch === 'ALAC' || arch === 'PROCEDURAL') {
+        document.getElementById('archetypeAlacFields')?.classList.remove('hidden');
+        if (topicLabel) topicLabel.innerText = arch === 'PROCEDURAL' ? "Procedural Vehicle / Remedy *" : "Topic / Problem Concept *";
+      } else {
+        document.getElementById('archetypeSimpleFields')?.classList.remove('hidden');
+        if (topicLabel) topicLabel.innerText = "Card Heading / Concept *";
+      }
+    }
+
+    async function openCardCreatorModal(preselectedDeckId = '__NEW__') {
+      editingCardContext = null;
+      document.getElementById('cardCreatorModalTitle').innerText = "Custom Flashcard Studio";
+      document.getElementById('saveAndCloseCardBtn').innerText = "Save Card";
+      document.getElementById('saveAndAddAnotherBtn')?.classList.remove('hidden');
+      document.getElementById('cardDestinationDeckSelect')?.removeAttribute('disabled');
+
+      document.getElementById('customTopicInput').value = '';
+      document.getElementById('customCitationInput').value = '';
+      document.getElementById('customQuestionPromptInput').value = '';
+      document.getElementById('codalRuleInput').value = '';
+      document.getElementById('codalRequisitesInput').value = '';
+      document.getElementById('codalStatExceptionsInput').value = '';
+      document.getElementById('codalJurisExceptionsInput').value = '';
+      document.getElementById('caseFactsInput').value = '';
+      document.getElementById('caseIssueInput').value = '';
+      document.getElementById('caseRulingInput').value = '';
+      document.getElementById('caseRatioInput').value = '';
+      document.getElementById('alacAInput').value = '';
+      document.getElementById('alacLInput').value = '';
+      document.getElementById('alacAppInput').value = '';
+      document.getElementById('alacCInput').value = '';
+      document.getElementById('simpleAnswerInput').value = '';
+      document.getElementById('bulkImportRawText').value = '';
+      document.getElementById('cardStudioFooterStatus').innerText = "Ready to author";
+
+      setCardStudioMode('SINGLE');
+      setCardArchetype('CODAL');
+      await populateCardStudioDeckSelector(preselectedDeckId);
+      document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+    }
+
+    function closeCardCreatorModal() {
+      editingCardContext = null;
+      document.getElementById('cardCreatorModal')?.classList.add('hidden');
+      document.getElementById('clozeFloatingToolbar')?.classList.add('hidden');
+    }
+
+    async function editCardFromBrowser(deckId, cardIndex) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards || !deck.cards[cardIndex]) return;
+      const card = deck.cards[cardIndex];
+
+      await openCardCreatorModal(deckId);
+      editingCardContext = { deckId, cardIndex, cardRef: card };
+
+      document.getElementById('cardCreatorModalTitle').innerText = `Edit Card #${cardIndex + 1}: ${card.topic || 'Card'}`;
+      document.getElementById('saveAndCloseCardBtn').innerText = "Update Card";
+      document.getElementById('saveAndAddAnotherBtn')?.classList.add('hidden');
+      document.getElementById('cardDestinationDeckSelect')?.setAttribute('disabled', 'true');
+
+      document.getElementById('customTopicInput').value = card.topic || card.case_title || '';
+      document.getElementById('customCitationInput').value = card.rule_citation || card.citation || '';
+      document.getElementById('customQuestionPromptInput').value = card.question_text || '';
+
+      if (card.benchmark_fir) {
+        setCardArchetype('CASE');
+        document.getElementById('caseFactsInput').value = card.benchmark_fir.facts || '';
+        document.getElementById('caseIssueInput').value = card.benchmark_fir.issue || '';
+        document.getElementById('caseRulingInput').value = card.benchmark_fir.ruling || '';
+        document.getElementById('caseRatioInput').value = card.benchmark_fir.ratio_doctrine || '';
+      } else if (card.benchmark_codal_breakdown) {
+        setCardArchetype('CODAL');
+        document.getElementById('codalRuleInput').value = card.codal_provision_text || card.benchmark_codal_breakdown.operative_rule_summary || '';
+        document.getElementById('codalRequisitesInput').value = card.benchmark_codal_breakdown.elements_requisites || '';
+        document.getElementById('codalStatExceptionsInput').value = card.benchmark_codal_breakdown.statutory_exceptions || '';
+        document.getElementById('codalJurisExceptionsInput').value = card.benchmark_codal_breakdown.jurisprudential_exceptions || '';
+      } else if (card.benchmark_alac) {
+        if (card.dimensionId === 10) setCardArchetype('PROCEDURAL');
+        else setCardArchetype('ALAC');
+        document.getElementById('alacAInput').value = card.benchmark_alac.p1_direct_answer || '';
+        document.getElementById('alacLInput').value = card.benchmark_alac.p2_legal_basis || '';
+        document.getElementById('alacAppInput').value = card.benchmark_alac.p3_analysis || '';
+        document.getElementById('alacCInput').value = card.benchmark_alac.p4_conclusion || '';
+      } else {
+        setCardArchetype('SIMPLE');
+        document.getElementById('simpleAnswerInput').value = card.model_answer || card.answer || '';
+      }
+    }
+
+    async function editActiveCardInPlace() {
+      const currentItem = state.activeAgenda[state.currentQuestionIndex - 1];
+      if (!currentItem) {
+        alert("No active recitation card currently loaded to edit.");
+        return;
+      }
+
+      await openCardCreatorModal();
+
+      let activeDeckId = null;
+      if (state.activeDeckTitle) {
+        const allDecks = await dbGetAll('decks');
+        const matchedDeck = allDecks.find(d => d.title === state.activeDeckTitle);
+        if (matchedDeck) activeDeckId = matchedDeck.id;
+      }
+
+      editingCardContext = {
+        isLiveActiveCard: true,
+        itemRef: currentItem,
+        deckId: activeDeckId
+      };
+
+      document.getElementById('cardCreatorModalTitle').innerText = `Live Recitation Editor · Card #${state.currentQuestionIndex}: ${currentItem.topic || currentItem.case_title}`;
+      document.getElementById('saveAndCloseCardBtn').innerText = "Update & Apply In-Place";
+      document.getElementById('saveAndAddAnotherBtn')?.classList.add('hidden');
+      document.getElementById('cardDestinationDeckSelect')?.setAttribute('disabled', 'true');
+
+      document.getElementById('customTopicInput').value = currentItem.topic || currentItem.case_title || '';
+      document.getElementById('customCitationInput').value = currentItem.rule_citation || currentItem.citation || '';
+      document.getElementById('customQuestionPromptInput').value = currentItem.question_text || state.currentQuestionText || '';
+
+      if (currentItem.benchmark_fir) {
+        setCardArchetype('CASE');
+        document.getElementById('caseFactsInput').value = currentItem.benchmark_fir.facts || '';
+        document.getElementById('caseIssueInput').value = currentItem.benchmark_fir.issue || '';
+        document.getElementById('caseRulingInput').value = currentItem.benchmark_fir.ruling || '';
+        document.getElementById('caseRatioInput').value = currentItem.benchmark_fir.ratio_doctrine || '';
+      } else if (currentItem.benchmark_codal_breakdown) {
+        setCardArchetype('CODAL');
+        document.getElementById('codalRuleInput').value = currentItem.codal_provision_text || currentItem.benchmark_codal_breakdown.operative_rule_summary || '';
+        document.getElementById('codalRequisitesInput').value = currentItem.benchmark_codal_breakdown.elements_requisites || '';
+        document.getElementById('codalStatExceptionsInput').value = currentItem.benchmark_codal_breakdown.statutory_exceptions || '';
+        document.getElementById('codalJurisExceptionsInput').value = currentItem.benchmark_codal_breakdown.jurisprudential_exceptions || '';
+      } else if (currentItem.benchmark_alac) {
+        if (currentItem.dimensionId === 10) setCardArchetype('PROCEDURAL');
+        else setCardArchetype('ALAC');
+        document.getElementById('alacAInput').value = currentItem.benchmark_alac.p1_direct_answer || '';
+        document.getElementById('alacLInput').value = currentItem.benchmark_alac.p2_legal_basis || '';
+        document.getElementById('alacAppInput').value = currentItem.benchmark_alac.p3_analysis || '';
+        document.getElementById('alacCInput').value = currentItem.benchmark_alac.p4_conclusion || '';
+      } else {
+        setCardArchetype('SIMPLE');
+        document.getElementById('simpleAnswerInput').value = currentItem.model_answer || currentItem.answer || '';
+      }
+    }
+
+    async function saveCustomCard(addAnother = false) {
+      if (currentCardStudioMode === 'BULK') {
+        await processBulkImport();
+        return;
+      }
+
+      const topic = document.getElementById('customTopicInput').value.trim();
+      const citation = document.getElementById('customCitationInput').value.trim();
+      const question = document.getElementById('customQuestionPromptInput').value.trim();
+
+      if (!topic || !question) {
+        alert("Please provide at least a Topic and a Question Prompt.");
+        return;
+      }
+
+      const builtCard = {
+        id: editingCardContext?.cardRef?.id || ('card_custom_' + Date.now()),
+        topic: topic,
+        rule_citation: citation || currentSubjectName,
+        question_text: question,
+        isCustom: true,
+        subject: currentSubjectName
+      };
+
+      if (currentCardArchetype === 'CODAL') {
+        builtCard.dimensionId = 2;
+        builtCard.schemaType = 'CODAL';
+        builtCard.exportTag = 'Essential Elements & Requisites';
+        builtCard.codal_provision_text = document.getElementById('codalRuleInput').value.trim();
+        builtCard.benchmark_codal_breakdown = {
+          operative_rule_summary: document.getElementById('codalRuleInput').value.trim(),
+          elements_requisites: document.getElementById('codalRequisitesInput').value.trim(),
+          statutory_exceptions: document.getElementById('codalStatExceptionsInput').value.trim(),
+          jurisprudential_exceptions: document.getElementById('codalJurisExceptionsInput').value.trim(),
+          application_ratio: "Author-curated statutory requisite breakdown."
+        };
+      } else if (currentCardArchetype === 'CASE') {
+        builtCard.dimensionId = 7;
+        builtCard.schemaType = 'FIR';
+        builtCard.isCase = true;
+        builtCard.case_title = topic;
+        builtCard.exportTag = 'Complete Case Brief (FIR)';
+        builtCard.benchmark_fir = {
+          facts: document.getElementById('caseFactsInput').value.trim(),
+          issue: document.getElementById('caseIssueInput').value.trim(),
+          ruling: document.getElementById('caseRulingInput').value.trim(),
+          ratio_doctrine: document.getElementById('caseRatioInput').value.trim()
+        };
+      } else if (currentCardArchetype === 'ALAC') {
+        builtCard.dimensionId = 9;
+        builtCard.schemaType = 'ALAC';
+        builtCard.exportTag = 'Bar Problem Hypothetical (ALAC)';
+        builtCard.benchmark_alac = {
+          p1_direct_answer: document.getElementById('alacAInput').value.trim(),
+          p2_legal_basis: document.getElementById('alacLInput').value.trim(),
+          p3_analysis: document.getElementById('alacAppInput').value.trim(),
+          p4_conclusion: document.getElementById('alacCInput').value.trim()
+        };
+      } else if (currentCardArchetype === 'PROCEDURAL') {
+        builtCard.dimensionId = 10;
+        builtCard.schemaType = 'ALAC';
+        builtCard.exportTag = 'Procedural Remedies & Bars';
+        builtCard.benchmark_alac = {
+          p1_direct_answer: document.getElementById('alacAInput').value.trim(),
+          p2_legal_basis: document.getElementById('alacLInput').value.trim(),
+          p3_analysis: document.getElementById('alacAppInput').value.trim(),
+          p4_conclusion: document.getElementById('alacCInput').value.trim()
+        };
+      } else {
+        builtCard.dimensionId = 1;
+        builtCard.schemaType = 'ALAC';
+        builtCard.exportTag = 'Author Curated Q&A';
+        const ans = document.getElementById('simpleAnswerInput').value.trim();
+        builtCard.benchmark_alac = {
+          p1_direct_answer: ans,
+          p2_legal_basis: citation || currentSubjectName,
+          p3_analysis: ans,
+          p4_conclusion: "Accurate recall confirmed."
+        };
+      }
+
+      // CASE 0: Live session in-place update
+      if (editingCardContext?.isLiveActiveCard && editingCardContext.itemRef) {
+        Object.assign(editingCardContext.itemRef, builtCard);
+        state.currentQuestionText = builtCard.question_text;
+        state.currentBenchmarkPayload = builtCard;
+
+        const qContainer = document.getElementById('questionContainer');
+        const activeTopic = document.getElementById('activeTopicName');
+        if (qContainer) qContainer.innerText = builtCard.question_text;
+        if (activeTopic) activeTopic.innerText = `${builtCard.topic} (${builtCard.rule_citation})`;
+
+        if (editingCardContext.deckId) {
+          const deck = await dbGet('decks', editingCardContext.deckId);
+          if (deck && deck.cards) {
+            const idx = deck.cards.findIndex(c => c.id === builtCard.id || c.topic === builtCard.topic);
+            if (idx !== -1) deck.cards[idx] = builtCard;
+            await dbSave('decks', deck);
+          }
+        }
+
+        await stampSubjectModifiedTimestamp();
+        closeCardCreatorModal();
+        alert("Card updated in-place! Live recitation session refreshed.");
+        return;
+      }
+
+      // CASE 1: Updating existing card from Deck Browser
+      if (editingCardContext?.deckId && editingCardContext.cardIndex !== undefined) {
+        const deck = await dbGet('decks', editingCardContext.deckId);
+        if (deck && deck.cards) {
+          deck.cards[editingCardContext.cardIndex] = { ...deck.cards[editingCardContext.cardIndex], ...builtCard };
+          await dbSave('decks', deck);
+          await stampSubjectModifiedTimestamp();
+          await renderDeckListUI();
+          if (currentBrowsingDeckId === editingCardContext.deckId) {
+            renderBrowserCardsList();
+          }
+        }
+        closeCardCreatorModal();
+        alert("Card updated successfully!");
+        return;
+      }
+
+      // CASE 2: Adding brand new card
+      const destSelect = document.getElementById('cardDestinationDeckSelect').value;
+
+      if (destSelect === '__NEW__') {
+        const titleInput = document.getElementById('newDeckTitleInput').value.trim() || `${currentSubjectName} - Custom Cards`;
+        const newDeck = {
+          id: 'deck_' + Date.now(),
+          subject: currentSubjectName,
+          title: titleInput,
+          createdAt: new Date().toISOString(),
+          cards: [builtCard]
+        };
+        await dbSave('decks', newDeck);
+        await populateCardStudioDeckSelector(newDeck.id);
+      } else {
+        const existingDeck = await dbGet('decks', destSelect);
+        if (existingDeck) {
+          if (!existingDeck.cards) existingDeck.cards = [];
+          existingDeck.cards.push(builtCard);
+          await dbSave('decks', existingDeck);
+        }
+      }
+
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      if (currentBrowsingDeckId) {
+        renderBrowserCardsList();
+      }
+
+      if (addAnother) {
+        document.getElementById('customTopicInput').value = '';
+        document.getElementById('customQuestionPromptInput').value = '';
+        document.getElementById('codalRequisitesInput').value = '';
+        document.getElementById('caseFactsInput').value = '';
+        document.getElementById('caseIssueInput').value = '';
+        document.getElementById('caseRulingInput').value = '';
+        document.getElementById('alacAInput').value = '';
+        document.getElementById('alacAppInput').value = '';
+        document.getElementById('simpleAnswerInput').value = '';
+        document.getElementById('customTopicInput').focus();
+        document.getElementById('cardStudioFooterStatus').innerText = "Card saved! Ready for next.";
+      } else {
+        closeCardCreatorModal();
+        alert("Card saved to deck successfully!");
+      }
+    }
+
+    function previewBulkImportCount() {
+      const raw = document.getElementById('bulkImportRawText')?.value.trim() || '';
+      const statusEl = document.getElementById('bulkParseStatus');
+      if (!raw) {
+        if (statusEl) statusEl.innerText = "0 card rows detected";
+        return 0;
+      }
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (statusEl) statusEl.innerText = `${lines.length} card row(s) detected and ready to ingest`;
+      return lines.length;
+    }
+
+    async function processBulkImport() {
+      const raw = document.getElementById('bulkImportRawText')?.value.trim() || '';
+      if (!raw) {
+        alert("Please paste your CSV, TSV, or Anki export lines.");
+        return;
+      }
+
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const parsedCards = [];
+
+      lines.forEach((line, idx) => {
+        let sanitizedLine = line
+          .replace(/\[sound:[^\]]+\]/gi, '')
+          .replace(/<br\s*[\/]?>/gi, '\n')
+          .replace(/<[^>]+>/gi, '')
+          .trim();
+
+        let parts = sanitizedLine.split('\t');
+        if (parts.length < 2) parts = sanitizedLine.split(',');
+
+        if (parts.length >= 2) {
+          const topic = parts[0].trim();
+          const question = parts[1].trim();
+          const answer = parts[2] ? parts[2].trim() : "Model answer not provided.";
+          const citation = parts[3] ? parts[3].trim() : currentSubjectName;
+
+          parsedCards.push({
+            id: `card_bulk_${Date.now()}_${idx}`,
+            topic: topic,
+            rule_citation: citation,
+            question_text: question,
+            isCustom: true,
+            dimensionId: 9,
+            schemaType: 'ALAC',
+            exportTag: 'Imported Reviewer Card',
+            benchmark_alac: {
+              p1_direct_answer: answer,
+              p2_legal_basis: citation,
+              p3_analysis: answer,
+              p4_conclusion: "Substantial recall confirmed."
+            }
+          });
+        }
+      });
+
+      if (parsedCards.length === 0) {
+        alert("Could not parse rows. Ensure each line has at least: Topic [TAB] Question [TAB] Model Answer");
+        return;
+      }
+
+      const destSelect = document.getElementById('cardDestinationDeckSelect').value;
+
+      if (destSelect === '__NEW__') {
+        const titleInput = document.getElementById('newDeckTitleInput').value.trim() || `${currentSubjectName} - Bulk Deck (${parsedCards.length} Cards)`;
+        const newDeck = {
+          id: 'deck_' + Date.now(),
+          subject: currentSubjectName,
+          title: titleInput,
+          createdAt: new Date().toISOString(),
+          cards: parsedCards
+        };
+        await dbSave('decks', newDeck);
+      } else {
+        const existingDeck = await dbGet('decks', destSelect);
+        if (existingDeck) {
+          if (!existingDeck.cards) existingDeck.cards = [];
+          existingDeck.cards.push(...parsedCards);
+          await dbSave('decks', existingDeck);
+        }
+      }
+
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      if (currentBrowsingDeckId) renderBrowserCardsList();
+      closeCardCreatorModal();
+      alert(`Success! Imported ${parsedCards.length} cards into your deck.`);
+    }
+
+    // =========================================================================
+    // PHASE 4: REMNOTE-STYLE CLOZE DELETION ENGINE
+    // =========================================================================
+    let activeSelectionTextarea = null;
+
+    function handleStudioSelectionEvent(e) {
+      const activeEl = document.activeElement;
+      const toolbar = document.getElementById('clozeFloatingToolbar');
+      if (!toolbar) return;
+
+      if (activeEl && (activeEl.tagName === 'TEXTAREA' || (activeEl.tagName === 'INPUT' && activeEl.type === 'text'))) {
+        if (!activeEl.closest('#cardCreatorModal')) {
+          toolbar.classList.add('hidden');
+          return;
+        }
+
+        const selStart = activeEl.selectionStart;
+        const selEnd = activeEl.selectionEnd;
+
+        if (selStart !== undefined && selEnd !== undefined && selEnd > selStart) {
+          activeSelectionTextarea = activeEl;
+          const elRect = activeEl.getBoundingClientRect();
+
+          const topPos = Math.max(12, elRect.top - 38);
+          const leftPos = Math.min(window.innerWidth - 270, Math.max(20, elRect.left + 15));
+
+          toolbar.style.top = `${topPos}px`;
+          toolbar.style.left = `${leftPos}px`;
+          toolbar.classList.remove('hidden');
+          return;
+        }
+      }
+      toolbar.classList.add('hidden');
+    }
+
+    document.addEventListener('selectionchange', handleStudioSelectionEvent);
+    document.addEventListener('mouseup', handleStudioSelectionEvent);
+
+    function applyClozeToActiveSelection(withHint = false) {
+      const ta = activeSelectionTextarea || document.activeElement;
+      if (!ta || (ta.tagName !== 'TEXTAREA' && ta.tagName !== 'INPUT')) return;
+
+      const selStart = ta.selectionStart;
+      const selEnd = ta.selectionEnd;
+      if (selStart === undefined || selEnd === undefined) return;
+
+      const fullText = ta.value;
+      let selectedText = fullText.substring(selStart, selEnd);
+      if (!selectedText || !selectedText.trim()) {
+        selectedText = "phrase";
+      }
+
+      const matches = fullText.match(/\{\{c(\d+)::/g) || [];
+      let maxNum = 0;
+      matches.forEach(m => {
+        const num = parseInt(m.replace('{{c', '').replace('::', ''), 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      });
+      const nextClozeNum = maxNum + 1;
+
+      let replacement = `{{c${nextClozeNum}::${selectedText}}}`;
+      if (withHint) {
+        const hint = prompt("Enter an optional hint for this cloze deletion (e.g., 'statutory threshold' or 'legal basis'):", "");
+        if (hint && hint.trim()) {
+          replacement = `{{c${nextClozeNum}::${selectedText}::${hint.trim()}}}`;
+        }
+      }
+
+      ta.value = fullText.substring(0, selStart) + replacement + fullText.substring(selEnd);
+      document.getElementById('clozeFloatingToolbar')?.classList.add('hidden');
+
+      const newCursorPos = selStart + replacement.length;
+      ta.focus();
+      ta.setSelectionRange(newCursorPos, newCursorPos);
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'TEXTAREA' || (activeEl.tagName === 'INPUT' && activeEl.type === 'text'))) {
+          if (activeEl.closest('#cardCreatorModal')) {
+            e.preventDefault();
+            activeSelectionTextarea = activeEl;
+            applyClozeToActiveSelection(false);
+          }
+        }
+      }
+    });
+
+    // =========================================================================
+    // PHASE 6: STATUTORY ANTI-TRUNCATION & SUBSTANTIVE ALAC HEALERS
+    // =========================================================================
+    function healTruncatedStatutoryText(text, topicHint) {
+      if (!text || !text.trim()) return text;
+      let trimmed = text.trim();
+
+      const endsDangling = /(:|—|-|\b(?:following|viz|as follows)\s*:?)$/i.test(trimmed);
+      if (!endsDangling) return trimmed;
+
+      const canonicalMatch = retrieveVerbatimProvision(topicHint || trimmed);
+      if (canonicalMatch && canonicalMatch.length > trimmed.length) {
+        return canonicalMatch;
+      }
+      return trimmed;
+    }
+
+    function healTruncatedAlacBasis(basisText, fallbackSubstantiveText) {
+      if (!basisText || !basisText.trim()) return fallbackSubstantiveText || basisText;
+      const cleanBasis = basisText.trim();
+
+      const isBareCitation = cleanBasis.length < 110 &&
+        /^(?:Rule|Section|Sec\.|Article|Art\.|R\.A\.|A\.M\.)\s+\d+/i.test(cleanBasis) &&
+        !/\b(?:provides|states|empowered|held|prohibits|mandates|shall|may|requires)\b/i.test(cleanBasis);
+
+      if (isBareCitation && fallbackSubstantiveText) {
+        const canonical = retrieveVerbatimProvision(fallbackSubstantiveText);
+        if (canonical) {
+          return `Under ${cleanBasis}, ${canonical}`;
+        }
+      }
+      return cleanBasis;
     }
   </script>
 </body>

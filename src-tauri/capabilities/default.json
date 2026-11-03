@@ -3,6 +3,11 @@
   "identifier": "default",
   "description": "Default permissions for Bar Simulator",
   "windows": ["main"],
+  "remote": {
+    "urls": [
+      "https://gabrielmateo826-netizen.github.io/bar-recitation-simulator/*"
+    ]
+  },
   "permissions": [
     "core:default",
     "dialog:default",
