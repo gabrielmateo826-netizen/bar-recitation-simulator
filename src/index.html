@@ -336,6 +336,61 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- DECK MERGE & UNMERGE WORKSPACE MODAL                                      -->
+  <!-- ========================================================================= -->
+  <div id="deckMergeModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[72] hidden flex items-center justify-center p-3 md:p-6">
+    <div class="bg-slate-900 border border-sky-600/60 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- HEADER -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-3">
+          <span class="w-8 h-8 rounded bg-sky-600 flex items-center justify-center font-serif font-bold text-slate-950 text-base shadow">⚗</span>
+          <div>
+            <h2 class="font-serif font-bold text-slate-100 text-base">Deck Merger & Card Selector</h2>
+            <p class="text-[11px] text-slate-400 font-mono">Select two decks, review all individual cards, and merge non-destructively.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeMergeModal()" class="text-slate-400 hover:text-slate-200 text-xl leading-none">&times;</button>
+      </div>
+
+      <!-- DECK SELECTION CONTROLS -->
+      <div class="px-6 py-4 border-b border-slate-800 bg-slate-950/40 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-mono uppercase text-amber-300 font-bold mb-1">Deck 1 (Source A):</label>
+          <select id="mergeDeckASelect" onchange="onMergeDeckSelectionChanged()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-500"></select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-mono uppercase text-sky-300 font-bold mb-1">Deck 2 (Source B):</label>
+          <select id="mergeDeckBSelect" onchange="onMergeDeckSelectionChanged()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500"></select>
+        </div>
+      </div>
+
+      <!-- CARDS PREVIEW SUMMARY BAR -->
+      <div class="px-6 py-2.5 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between text-xs font-mono">
+        <span id="mergeSummaryBadge" class="text-slate-300">0 Total Cards Ready to Merge</span>
+        <div class="flex items-center space-x-3">
+          <label class="flex items-center space-x-1.5 cursor-pointer text-slate-400 hover:text-slate-200">
+            <input type="checkbox" id="mergeDedupToggle" checked onchange="onMergeDeckSelectionChanged()" class="rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-0">
+            <span>Deduplicate matching cards</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- SCROLLABLE CARDS CONTAINER -->
+      <div id="mergeCardsListContainer" class="p-6 overflow-y-auto space-y-2 flex-1 text-xs text-slate-300">
+        <div class="text-slate-500 italic text-center py-8">Select two decks above to inspect all cards before merging.</div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+        <input type="text" id="mergeNewDeckTitleInput" placeholder="New Merged Deck Title..." class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-sans focus:outline-none focus:border-sky-500 flex-1 max-w-md mr-3" />
+        <div class="flex items-center space-x-2.5">
+          <button type="button" onclick="closeMergeModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-lg text-xs font-mono transition">Cancel</button>
+          <button type="button" onclick="executeDeckMerge()" class="bg-sky-600 hover:bg-sky-500 text-slate-950 font-bold px-5 py-2 rounded-lg text-xs font-mono transition shadow">Create Merged Deck</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ========================================================================= -->
   <!-- PHASE 2: DECK CARD BROWSER & INSPECTOR MODAL ("VIEW CARDS")               -->
   <!-- ========================================================================= -->
   <div id="deckBrowserModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[65] hidden flex items-center justify-center p-3 md:p-6">
@@ -5071,6 +5126,11 @@ function extractCardParagraphsForExport(c) {
             <button onclick="promptMergeDecks('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-800/60 rounded font-mono text-[11px] transition font-semibold" title="Combines cards from another deck into this deck while keeping the source deck intact">
               ⚗ Merge
             </button>
+            ${(deck.isMerged || (deck.cards && deck.cards.some(c => c.originDeckId))) ? `
+            <!-- UNMERGE / SPLIT DECK -->
+            <button onclick="unmergeDeck('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-800/60 rounded font-mono text-[11px] transition font-semibold" title="Split this merged deck back into separate individual decks">
+              ⚚ Unmerge
+            </button>` : ''}
 
             <!-- EXPORT WORD / MD / JSON -->
             <button onclick="exportDeckAsMarkdownStudySheet('${deck.id}')" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded font-mono text-[10px] transition" title="Export this deck as an Obsidian/Markdown study sheet">
@@ -5154,6 +5214,8 @@ function extractCardParagraphsForExport(c) {
       if (confirm(`Permanently delete all saved decks for ${currentSubjectName}?`)) {
         await dbClearSubjectStore('decks');
         await renderDeckListUI();
+      }
+    }
     // =========================================================================
     // DECK MERGE & DUPLICATION ENGINE (NON-DESTRUCTIVE)
     // =========================================================================
@@ -5182,90 +5244,214 @@ function extractCardParagraphsForExport(c) {
       alert(`✅ Duplicated deck: "${dupObj.title}" (${dupObj.cards.length} cards).`);
     }
 
-    async function promptMergeDecks(sourceDeckIdA) {
-      const decks = await dbGetAll('decks');
-      const deckA = decks.find(d => d.id === sourceDeckIdA);
-      if (!deckA) {
-        alert("Selected deck could not be found.");
+// =========================================================================
+    // VISUAL DECK MERGE & ACTIVE UNMERGE CONTROLLER
+    // =========================================================================
+    let activeMergeSourceDecks = [];
+
+    async function promptMergeDecks(preSelectedDeckId) {
+      activeMergeSourceDecks = await dbGetAll('decks');
+      if (activeMergeSourceDecks.length < 2) {
+        alert("You need at least two saved decks in this subject workspace to perform a merge.");
         return;
       }
 
-      const otherDecks = decks.filter(d => d.id !== sourceDeckIdA);
-      if (otherDecks.length === 0) {
-        alert("No other decks in this subject workspace to merge with. Create or import another deck first.");
-        return;
-      }
+      const selA = document.getElementById('mergeDeckASelect');
+      const selB = document.getElementById('mergeDeckBSelect');
+      if (!selA || !selB) return;
 
-      // 1. Display list of decks with card counts
-      let menu = `MERGE DECKS (Non-Destructive)\n\n` +
-                 `Deck 1: "${deckA.title}" (${deckA.cards ? deckA.cards.length : 0} cards)\n\n` +
-                 `Select the second deck to merge with Deck 1:\n`;
-      otherDecks.forEach((d, idx) => {
-        menu += `${idx + 1}. ${d.title} (${d.cards ? d.cards.length : 0} cards)\n`;
+      selA.innerHTML = '';
+      selB.innerHTML = '';
+
+      activeMergeSourceDecks.forEach((d, idx) => {
+        const count = d.cards ? d.cards.length : 0;
+        const optA = document.createElement('option');
+        optA.value = d.id;
+        optA.innerText = `${d.title} (${count} cards)`;
+        selA.appendChild(optA);
+
+        const optB = document.createElement('option');
+        optB.value = d.id;
+        optB.innerText = `${d.title} (${count} cards)`;
+        selB.appendChild(optB);
       });
-      menu += `\nEnter the number of the second deck (1-${otherDecks.length}):`;
 
-      const input = prompt(menu);
-      if (!input) return;
+      if (preSelectedDeckId) {
+        selA.value = preSelectedDeckId;
+        const other = activeMergeSourceDecks.find(d => d.id !== preSelectedDeckId);
+        if (other) selB.value = other.id;
+      } else {
+        selA.selectedIndex = 0;
+        selB.selectedIndex = 1;
+      }
 
-      const choice = parseInt(input.trim(), 10) - 1;
-      if (isNaN(choice) || choice < 0 || choice >= otherDecks.length) {
-        alert("Invalid selection.");
+      document.getElementById('deckMergeModal').classList.remove('hidden');
+      onMergeDeckSelectionChanged();
+    }
+
+    function closeMergeModal() {
+      document.getElementById('deckMergeModal').classList.add('hidden');
+    }
+
+    function onMergeDeckSelectionChanged() {
+      const idA = document.getElementById('mergeDeckASelect').value;
+      const idB = document.getElementById('mergeDeckBSelect').value;
+      const container = document.getElementById('mergeCardsListContainer');
+      const summaryBadge = document.getElementById('mergeSummaryBadge');
+      const titleInput = document.getElementById('mergeNewDeckTitleInput');
+      const isDedup = document.getElementById('mergeDedupToggle').checked;
+
+      const deckA = activeMergeSourceDecks.find(d => d.id === idA);
+      const deckB = activeMergeSourceDecks.find(d => d.id === idB);
+
+      if (!deckA || !deckB) return;
+
+      if (idA === idB) {
+        container.innerHTML = `<div class="text-amber-400 italic text-center py-8">Please choose two different decks to merge.</div>`;
+        summaryBadge.innerText = "Select two distinct decks";
         return;
       }
 
-      const deckB = otherDecks[choice];
-      const cardsA = Array.isArray(deckA.cards) ? JSON.parse(JSON.stringify(deckA.cards)) : [];
-      const cardsB = Array.isArray(deckB.cards) ? JSON.parse(JSON.stringify(deckB.cards)) : [];
+      titleInput.value = `${deckA.title} + ${deckB.title} (Merged)`;
 
-      // 2. Combine all cards from both decks without dropping any
-      const combinedCards = [];
-      const seenCardSignatures = new Set();
+      const cardsA = Array.isArray(deckA.cards) ? deckA.cards : [];
+      const cardsB = Array.isArray(deckB.cards) ? deckB.cards : [];
 
-      function insertCard(card) {
-        // Fingerprint by question prompt, topic, or unique payload
-        const sig = (card.question_text || card.question || card.topic || card.case_title || JSON.stringify(card)).trim().toLowerCase();
-        if (!seenCardSignatures.has(sig)) {
-          seenCardSignatures.add(sig);
-          combinedCards.push({
-            ...card,
-            id: 'card_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)
-          });
-        }
+      let mergedList = [];
+      const seen = new Set();
+
+      cardsA.forEach((c, idx) => {
+        const sig = (c.question_text || c.topic || c.case_title || '').trim().toLowerCase();
+        seen.add(sig);
+        mergedList.push({ card: c, sourceLabel: deckA.title, sourceColor: 'text-amber-300 border-amber-800 bg-amber-950/40', originId: deckA.id });
+      });
+
+      cardsB.forEach((c, idx) => {
+        const sig = (c.question_text || c.topic || c.case_title || '').trim().toLowerCase();
+        if (isDedup && seen.has(sig)) return;
+        seen.add(sig);
+        mergedList.push({ card: c, sourceLabel: deckB.title, sourceColor: 'text-sky-300 border-sky-800 bg-sky-950/40', originId: deckB.id });
+      });
+
+      summaryBadge.innerText = `${mergedList.length} Cards Total (${cardsA.length} from Deck 1, ${cardsB.length} from Deck 2)`;
+
+      container.innerHTML = mergedList.map((entry, idx) => {
+        const c = entry.card;
+        const topic = c.topic || c.case_title || 'Untitled Card';
+        const prompt = c.question_text || c.question || 'No question prompt text available';
+        const dimTag = c.exportTag || (c.dimensionId ? `Dim ${c.dimensionId}` : '');
+
+        return `
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1 hover:border-slate-700 transition">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-bold text-slate-100 truncate">${idx + 1}. ${escapeHtml(topic)}</span>
+              <div class="flex items-center space-x-2 shrink-0">
+                ${dimTag ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-900 border border-slate-800 text-slate-400">${escapeHtml(dimTag)}</span>` : ''}
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono border ${entry.sourceColor}">${escapeHtml(entry.sourceLabel)}</span>
+              </div>
+            </div>
+            <p class="text-slate-400 text-[11px] line-clamp-2 leading-relaxed">${escapeHtml(prompt)}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function executeDeckMerge() {
+      const idA = document.getElementById('mergeDeckASelect').value;
+      const idB = document.getElementById('mergeDeckBSelect').value;
+      const newTitle = document.getElementById('mergeNewDeckTitleInput').value.trim();
+      const isDedup = document.getElementById('mergeDedupToggle').checked;
+
+      if (idA === idB) {
+        alert("Select two different decks to merge.");
+        return;
+      }
+      if (!newTitle) {
+        alert("Please enter a title for the new merged deck.");
+        return;
       }
 
-      cardsA.forEach(insertCard);
-      cardsB.forEach(insertCard);
+      const deckA = activeMergeSourceDecks.find(d => d.id === idA);
+      const deckB = activeMergeSourceDecks.find(d => d.id === idB);
+      if (!deckA || !deckB) return;
 
-      // 3. Prompt for NEW deck title (leaves Deck A and Deck B 100% untouched)
-      const defaultTitle = `${deckA.title} + ${deckB.title} (Merged)`;
-      const newTitle = prompt(
-        `Merging Decks:\n` +
-        `• "${deckA.title}": ${cardsA.length} cards\n` +
-        `• "${deckB.title}": ${cardsB.length} cards\n\n` +
-        `Total combined unique cards: ${combinedCards.length}\n` +
-        `(Note: Both original decks will remain completely untouched)\n\n` +
-        `Enter a title for this NEW merged deck:`,
-        defaultTitle
-      );
-      if (!newTitle || !newTitle.trim()) return;
+      const combined = [];
+      const seen = new Set();
 
-      // 4. Save brand new deck to IndexedDB
+      const addCard = (card, originId, originTitle) => {
+        const sig = (card.question_text || card.topic || card.case_title || '').trim().toLowerCase();
+        if (isDedup && seen.has(sig)) return;
+        seen.add(sig);
+
+        combined.push({
+          ...JSON.parse(JSON.stringify(card)),
+          id: 'card_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+          originDeckId: originId,
+          originDeckTitle: originTitle
+        });
+      };
+
+      (deckA.cards || []).forEach(c => addCard(c, deckA.id, deckA.title));
+      (deckB.cards || []).forEach(c => addCard(c, deckB.id, deckB.title));
+
       const mergedDeckObj = {
         id: 'deck_merged_' + Date.now(),
         subject: currentSubjectName,
-        title: newTitle.trim(),
+        title: newTitle,
         createdAt: new Date().toISOString(),
-        cards: combinedCards
+        cards: combined,
+        isMerged: true,
+        originMetadata: {
+          deckA: { id: deckA.id, title: deckA.title },
+          deckB: { id: deckB.id, title: deckB.title }
+        }
       };
 
       await dbSave('decks', mergedDeckObj);
       await stampSubjectModifiedTimestamp();
       await renderDeckListUI();
+      closeMergeModal();
 
-      alert(`✅ Created NEW merged deck: "${mergedDeckObj.title}" with ${mergedDeckObj.cards.length} cards.\n\nBoth "${deckA.title}" and "${deckB.title}" remain preserved in your library.`);
+      alert(`✅ Created merged deck: "${mergedDeckObj.title}" with ${mergedDeckObj.cards.length} cards.\nOriginal decks were preserved.`);
     }
+
+    // ACTIVE UNMERGE / SPLIT DECK
+    async function unmergeDeck(deckId) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards) return;
+
+      const cardsByOrigin = {};
+      deck.cards.forEach(c => {
+        const originId = c.originDeckId || 'original_remainder';
+        const originTitle = c.originDeckTitle || 'Remainder Deck';
+        if (!cardsByOrigin[originId]) {
+          cardsByOrigin[originId] = { title: originTitle, cards: [] };
+        }
+        cardsByOrigin[originId].cards.push(c);
+      });
+
+      const originKeys = Object.keys(cardsByOrigin);
+      if (originKeys.length < 2) {
+        alert("This deck does not contain separate origin tags to automatically split.");
+        return;
       }
+
+      if (!confirm(`Split "${deck.title}" back into ${originKeys.length} separate decks?`)) return;
+
+      for (const key of originKeys) {
+        const group = cardsByOrigin[key];
+        const splitDeck = {
+          id: 'deck_split_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          subject: currentSubjectName,
+          title: `${group.title} (Split from ${deck.title})`,
+          createdAt: new Date().toISOString(),
+          cards: group.cards
+        };
+        await dbSave('decks', splitDeck);
+      }
+
+      await renderDeckListUI();
+      alert(`✅ Successfully split "${deck.title}" into ${originKeys.length} separate decks.`);
     }
 
 // Automatically retrieves active cards from state pools or directly from IndexedDB
