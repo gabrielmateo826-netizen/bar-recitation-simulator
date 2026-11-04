@@ -1,37 +1,32 @@
 name: Build macOS DMG
 
 on:
-  workflow_dispatch: # Allows manual 1-click trigger from GitHub web UI
+  workflow_dispatch:
   push:
-    branches: [main, master]
+    branches: [ main ]
 
 jobs:
   build-mac:
-    runs-on: macos-13 # Apple Silicon (M1/M2/M3/M4) runner
+    runs-on: macos-13
+    
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: Setup Rust Toolchain
+      - name: Install Rust stability
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin, x86_64-apple-darwin
 
-      - name: Install Frontend Dependencies
+      - name: Install dependencies (macOS)
         run: npm install
 
-      - name: Build Tauri macOS App (Universal DMG)
-        run: npm run tauri build -- --target universal-apple-darwin
-
-      - name: Upload macOS Installer (.dmg)
-        uses: actions/upload-artifact@v4
+      - name: Build Tauri App (DMG)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: BarRecitationSimulator-macOS-Universal
-          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
-          if-no-files-found: error
+          args: --bundles dmg
