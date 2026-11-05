@@ -6,6 +6,7 @@
   <title>Philippine Bar Recitation Simulator (Universal Hybrid Engine v14.0)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     tailwind.config = {
@@ -53,10 +54,16 @@
             Awaiting Anchors (Syllabus or Sources)
           </span>
         </div>
-        <p class="text-xs text-slate-400">
-          Model: <span id="activeModelBadge" class="font-mono text-amber-400 font-semibold">gemini-3.8-flash</span> ·
-          Key: <span id="activeKeyBadge" class="font-mono text-slate-300">1 of 1</span> ·
-          Preset: <span id="activePresetHeaderLabel" class="font-mono text-emerald-400 font-semibold">Full Bar Sim (10/10)</span>
+        <p class="text-xs text-slate-400 flex items-center space-x-1.5 flex-wrap">
+          <span>Model: <span id="activeModelBadge" class="font-mono text-amber-400 font-semibold">gemini-3.8-flash</span></span>
+          <span>·</span>
+          <span>Key: <span id="activeKeyBadge" class="font-mono text-slate-300">1 of 1</span></span>
+          <span>·</span>
+          <span>Preset: <span id="activePresetHeaderLabel" class="font-mono text-emerald-400 font-semibold">Full Bar Sim (10/10)</span></span>
+          <span>·</span>
+          <span id="headerSyncStatusBadge" onclick="openDriveHealthModal()" class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-400 cursor-pointer hover:border-slate-600 transition" title="Click to inspect Google Drive AppData Sync Diagnostics">
+            💾 Local Mode
+          </span>
         </p>
       </div>
     </div>
@@ -206,8 +213,9 @@
             Recitation Answer Pad (Polymorphic: ALAC · FIR · Codal)
           </label>
           <div class="flex items-center space-x-2">
-            <button id="editCurrentCardBtn" type="button" onclick="editActiveCardInPlace()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-300 px-2.5 py-0.5 rounded border border-amber-700/70 font-mono font-semibold transition cursor-pointer" title="Edit this card's prompt, citations, or model answers in place without losing your active recitation session">
-              ✏️ Edit Card
+            <button id="editCurrentCardBtn" type="button" onclick="editActiveCardInPlace(false)" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-300 px-2.5 py-0.5 rounded border border-amber-700/70 font-mono font-semibold transition cursor-pointer flex items-center space-x-1" title="Edit this card's prompt, citations, or model answers in place without losing your active recitation session (Press Ctrl+E)">
+              <span>✏️ Edit Card</span>
+              <kbd class="px-1 py-0.2 bg-slate-950 text-amber-400 border border-slate-700 rounded text-[9px]">Ctrl+E</kbd>
             </button>
             <span id="wordCount" class="text-xs font-mono text-slate-400">0 words</span>
           </div>
@@ -301,12 +309,18 @@
         </div>
       </div>
 
-      <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between">
+      <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between flex-wrap gap-2">
         <span class="text-xs text-slate-400">Review diagnostic feedback before proceeding.</span>
-        <button onclick="proceedToNextQuestion()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-6 py-2 rounded-lg text-sm transition shadow flex items-center space-x-2">
-          <span>Proceed to Next Card</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-        </button>
+        <div class="flex items-center space-x-2.5">
+          <button type="button" onclick="editActiveCardInPlace(true)" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/70 font-mono font-semibold px-4 py-2 rounded-lg text-xs transition shadow flex items-center space-x-1.5 cursor-pointer" title="Edit this card's prompt, citations, or model answers in place (Press E)">
+            <span>✏️ Edit Card</span>
+            <kbd class="px-1.5 py-0.5 bg-slate-950 text-amber-400 border border-amber-600/50 rounded text-[10px] font-bold">E</kbd>
+          </button>
+          <button onclick="proceedToNextQuestion()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-6 py-2 rounded-lg text-sm transition shadow flex items-center space-x-2 cursor-pointer">
+            <span>Proceed to Next Card</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -986,6 +1000,74 @@
       </div>
 
       <div class="p-6 overflow-y-auto space-y-5 flex-1 text-sm">
+        <!-- GOOGLE DRIVE APPDATA SYNC & AUTHENTICATION PORTAL -->
+        <div id="googleAuthSection" class="p-4 rounded-xl border border-sky-800/60 bg-sky-950/20 backdrop-blur space-y-3">
+          
+          <!-- STATE A: UNAUTHENTICATED / GUEST PROMPT -->
+          <div id="authPromptContainer" class="space-y-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="space-y-1">
+                <span class="text-xs font-mono font-bold uppercase text-sky-400 flex items-center space-x-1.5">
+                  <svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/></svg>
+                  <span>Google Drive Cross-Device Sync (Zero Server · Private)</span>
+                </span>
+                <p class="text-[11px] text-slate-300 leading-relaxed">
+                  Sign in with your personal Gmail to synchronize your decks, weak-spot mastery, and unfinished card sessions automatically across your laptop and tablet without manual exports.
+                </p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-950 text-sky-300 border border-sky-800 shrink-0">
+                PATH 2 SYNC
+              </span>
+            </div>
+
+            <div class="flex items-center space-x-2.5 pt-1">
+              <button type="button" onclick="initiateGoogleDriveLogin()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-lg text-xs font-sans flex items-center space-x-2 shadow transition cursor-pointer">
+                <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                <span>Sign in with Google</span>
+              </button>
+              <button type="button" onclick="continueAsGuest()" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg text-xs font-mono transition cursor-pointer">
+                Continue as Guest
+              </button>
+            </div>
+          </div>
+
+          <!-- GUEST WARNING BOX (SHOWN WHEN GUEST IS SELECTED) -->
+          <div id="guestWarningBox" class="hidden p-3 rounded-lg border border-amber-700/70 bg-amber-950/30 text-xs space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="flex items-center space-x-1.5 font-bold text-amber-300 font-mono">
+                <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>GUEST MODE ACTIVE (LOCAL STORAGE ONLY)</span>
+              </span>
+              <button type="button" onclick="initiateGoogleDriveLogin()" class="text-[11px] font-mono text-sky-400 hover:underline">
+                Sign In to Enable Cloud Sync ↗
+              </button>
+            </div>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              ⚠️ Decks, cards, and mastery progress are saved <b>solely in this device's browser memory</b>. Clearing cache or switching browsers/devices will erase your cards.
+            </p>
+          </div>
+
+          <!-- STATE B: AUTHENTICATED USER BAR -->
+          <div id="authenticatedUserContainer" class="hidden flex items-center justify-between flex-wrap gap-2 pt-1">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <div>
+                <span id="authEmailLabel" class="text-xs font-mono font-bold text-emerald-300 block">account@gmail.com</span>
+                <span id="authDriveSyncTime" class="text-[10px] font-mono text-slate-400">Google Drive AppData Connected</span>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button type="button" onclick="syncWithGoogleDrive(true)" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow flex items-center space-x-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span>Sync Now</span>
+              </button>
+              <button type="button" onclick="signOutGoogleDrive()" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/80 rounded-lg text-xs font-mono transition">
+                Sign Out
+              </button>
+            </div>
+          </div>
+
+        </div>
 
         <!-- LIVE GATEKEEPER & OPERATING PIPELINE BANNER -->
         <div id="gatekeeperBanner" class="p-3.5 rounded-xl border border-red-800/80 bg-red-950/30 flex items-start justify-between gap-3 transition">
@@ -1393,6 +1475,383 @@
   </div>
 
 <script>
+    // ---------------------------------------------------------------------------
+    // GOOGLE DRIVE APPDATA SYNC & AUTHENTICATION SUBSYSTEM (PATH 2)
+    // ---------------------------------------------------------------------------
+    const GOOGLE_CLIENT_ID = '903073071581-i47u689diq5t8u4s1v4ac4qrgievgcif.apps.googleusercontent.com';
+    const DRIVE_SYNC_FILENAME = 'BarRecitMasterBackup_DriveSync.json';
+    const DRIVE_APPDATA_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+
+    let gDriveTokenClient = null;
+    let gDriveAccessToken = null;
+    let gDriveUserEmail = null;
+    let isGuestSession = false;
+
+    function initGoogleAuthClient() {
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+        return false;
+      }
+      if (!gDriveTokenClient) {
+        gDriveTokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: DRIVE_APPDATA_SCOPE,
+          callback: async (resp) => {
+            if (resp.error) {
+              console.error("Google Auth error:", resp);
+              alert("Google Sign-In failed: " + resp.error);
+              return;
+            }
+            gDriveAccessToken = resp.access_token;
+            sessionStorage.setItem('bar_drive_access_token', gDriveAccessToken);
+            await fetchGoogleUserInfo();
+            updateAuthUIState(true);
+            if (typeof syncWithGoogleDrive === 'function') {
+              await syncWithGoogleDrive(false);
+            }
+          }
+        });
+      }
+      return true;
+    }
+
+    async function fetchGoogleUserInfo() {
+      if (!gDriveAccessToken) return;
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${gDriveAccessToken}` }
+        });
+        if (res.ok) {
+          const user = await res.json();
+          gDriveUserEmail = user.email || 'Connected User';
+          sessionStorage.setItem('bar_drive_user_email', gDriveUserEmail);
+        }
+      } catch (e) {
+        console.warn("Could not fetch user profile info:", e);
+        gDriveUserEmail = 'Google Account Connected';
+      }
+    }
+
+    function initiateGoogleDriveLogin() {
+      if (!initGoogleAuthClient()) {
+        alert("Google Identity Services script is still loading. Please try again in a few seconds.");
+        return;
+      }
+      isGuestSession = false;
+      gDriveTokenClient.requestAccessToken({ prompt: 'consent' });
+    }
+
+    function continueAsGuest() {
+      isGuestSession = true;
+      document.getElementById('authPromptContainer')?.classList.add('hidden');
+      document.getElementById('guestWarningBox')?.classList.remove('hidden');
+      document.getElementById('authenticatedUserContainer')?.classList.add('hidden');
+      const badge = document.getElementById('headerSyncStatusBadge');
+      if (badge) {
+        badge.innerText = "💾 Guest (Local)";
+        badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-800 text-amber-300";
+      }
+    }
+
+    function signOutGoogleDrive() {
+      if (gDriveAccessToken && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+        try {
+          google.accounts.oauth2.revoke(gDriveAccessToken, () => {});
+        } catch (_) {}
+      }
+      gDriveAccessToken = null;
+      gDriveUserEmail = null;
+      isGuestSession = false;
+      sessionStorage.removeItem('bar_drive_access_token');
+      sessionStorage.removeItem('bar_drive_user_email');
+      updateAuthUIState(false);
+      alert("Signed out from Google Drive Sync.");
+    }
+
+    function updateAuthUIState(isAuthenticated) {
+      const promptBox = document.getElementById('authPromptContainer');
+      const warningBox = document.getElementById('guestWarningBox');
+      const userBox = document.getElementById('authenticatedUserContainer');
+      const emailLabel = document.getElementById('authEmailLabel');
+      const syncTimeLabel = document.getElementById('authDriveSyncTime');
+      const badge = document.getElementById('headerSyncStatusBadge');
+
+      if (isAuthenticated) {
+        promptBox?.classList.add('hidden');
+        warningBox?.classList.add('hidden');
+        userBox?.classList.remove('hidden');
+        if (emailLabel) emailLabel.innerText = gDriveUserEmail || 'Google Drive Connected';
+        if (syncTimeLabel) syncTimeLabel.innerText = "Connected to appDataFolder";
+        if (badge) {
+          badge.innerText = "☁️ Drive Connected";
+          badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-950/70 border border-emerald-800 text-emerald-300";
+        }
+      } else {
+        promptBox?.classList.remove('hidden');
+        warningBox?.classList.add('hidden');
+        userBox?.classList.add('hidden');
+        if (badge) {
+          badge.innerText = "💾 Local Mode";
+          badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400";
+        }
+      }
+    }
+    // ---------------------------------------------------------------------------
+    // GOOGLE DRIVE REST API HELPERS: APPDATA FOLDER READ / WRITE / MERGE
+    // ---------------------------------------------------------------------------
+    async function findDriveSyncFileId() {
+      if (!gDriveAccessToken) return null;
+      try {
+        const query = encodeURIComponent(`name = '${DRIVE_SYNC_FILENAME}' and 'appDataFolder' in parents and trashed = false`);
+        const url = `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${query}&fields=files(id,name,modifiedTime)`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${gDriveAccessToken}` }
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return (data.files && data.files.length > 0) ? data.files[0].id : null;
+      } catch (e) {
+        console.warn("Error finding Drive sync file:", e);
+        return null;
+      }
+    }
+
+    async function downloadDriveSyncPayload(fileId) {
+      if (!gDriveAccessToken || !fileId) return null;
+      try {
+        const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${gDriveAccessToken}` }
+        });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        console.warn("Error downloading Drive sync file:", e);
+        return null;
+      }
+    }
+
+    async function uploadDriveSyncPayload(payloadJsonString, existingFileId = null) {
+      if (!gDriveAccessToken) return false;
+      try {
+        const metadata = {
+          name: DRIVE_SYNC_FILENAME,
+          parents: ['appDataFolder']
+        };
+
+        const boundary = '-------314159265358979323846';
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const close_delim = "\r\n--" + boundary + "--";
+
+        const multipartRequestBody =
+          delimiter +
+          'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+          JSON.stringify(metadata) +
+          delimiter +
+          'Content-Type: application/json\r\n\r\n' +
+          payloadJsonString +
+          close_delim;
+
+        let uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+        let method = 'POST';
+
+        if (existingFileId) {
+          uploadUrl = `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=multipart`;
+          method = 'PATCH';
+        }
+
+        const res = await fetch(uploadUrl, {
+          method: method,
+          headers: {
+            Authorization: `Bearer ${gDriveAccessToken}`,
+            'Content-Type': `multipart/related; boundary=${boundary}`
+          },
+          body: multipartRequestBody
+        });
+
+        return res.ok;
+      } catch (e) {
+        console.error("Error uploading to Google Drive appDataFolder:", e);
+        return false;
+      }
+    }
+
+    async function generateCompleteMasterPayload() {
+      const meta = await dbGetAllRaw('metadata');
+      const sources = await dbGetAllRaw('sources');
+      const digests = await dbGetAllRaw('digests');
+      const mastery = await dbGetAllRaw('mastery');
+      const decks = await dbGetAllRaw('decks');
+
+      return {
+        format: "ph_bar_recit_drive_sync_v1",
+        syncTimestamp: Date.now(),
+        syncDate: new Date().toISOString(),
+        userEmail: gDriveUserEmail,
+        metadata: meta,
+        sources: sources,
+        digests: digests,
+        mastery: mastery,
+        decks: decks
+      };
+    }
+
+    function openDriveHealthModal() {
+      document.getElementById('driveSyncHealthModal')?.classList.remove('hidden');
+      forceDriveHealthCheck();
+    }
+
+    function closeDriveHealthModal() {
+      document.getElementById('driveSyncHealthModal')?.classList.add('hidden');
+    }
+
+    async function forceDriveHealthCheck() {
+      const acctLabel = document.getElementById('diagAccountStatus');
+      const localTimeLabel = document.getElementById('diagLocalTimestamp');
+      const remoteTimeLabel = document.getElementById('diagRemoteTimestamp');
+      const deckCountLabel = document.getElementById('diagDeckCount');
+      const conflictBox = document.getElementById('diagConflictBox');
+
+      if (!gDriveAccessToken) {
+        if (acctLabel) acctLabel.innerHTML = `<span class="text-amber-400 font-bold">Unauthenticated (Guest Mode)</span>`;
+        if (remoteTimeLabel) remoteTimeLabel.innerText = "Sign in to check remote file";
+        if (conflictBox) conflictBox.classList.add('hidden');
+        return;
+      }
+
+      if (acctLabel) acctLabel.innerHTML = `<span class="text-emerald-400 font-bold">✓ Connected (${escapeHtml(gDriveUserEmail || 'User')})</span>`;
+
+      // Check local DB timestamp & deck count
+      const localMetaRecord = await dbGet('metadata', metaKey('lastModifiedTimestamp'));
+      const localTime = localMetaRecord ? localMetaRecord.val : 0;
+      if (localTimeLabel) localTimeLabel.innerText = localTime ? new Date(localTime).toLocaleString() : 'No local edits recorded';
+
+      const decks = await dbGetAll('decks');
+      if (deckCountLabel) deckCountLabel.innerText = `${decks.length} Decks (${decks.reduce((a, d) => a + (d.cards ? d.cards.length : 0), 0)} Total Cards)`;
+
+      // Scan remote Drive AppData folder
+      try {
+        if (remoteTimeLabel) remoteTimeLabel.innerText = "Querying Google Drive API...";
+        const fileId = await findDriveSyncFileId();
+        if (!fileId) {
+          if (remoteTimeLabel) remoteTimeLabel.innerText = "No remote file yet (Will create on next sync)";
+          if (conflictBox) conflictBox.classList.add('hidden');
+          return;
+        }
+
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=modifiedTime`, {
+          headers: { Authorization: `Bearer ${gDriveAccessToken}` }
+        });
+
+        if (res.ok) {
+          const fileMeta = await res.json();
+          const remoteDate = new Date(fileMeta.modifiedTime);
+          if (remoteTimeLabel) remoteTimeLabel.innerText = `${remoteDate.toLocaleString()} (File ID: ${fileId.substring(0, 8)}...)`;
+
+          if (remoteDate.getTime() > (localTime + 3000)) {
+            if (conflictBox) conflictBox.classList.remove('hidden');
+          } else {
+            if (conflictBox) conflictBox.classList.add('hidden');
+          }
+        }
+      } catch (e) {
+        if (remoteTimeLabel) remoteTimeLabel.innerText = "Scan failed: " + e.message;
+      }
+    }
+
+    async function syncWithGoogleDrive(interactive = false) {
+      if (!gDriveAccessToken) {
+        if (interactive) initiateGoogleDriveLogin();
+        return;
+      }
+
+      const syncTimeLabel = document.getElementById('authDriveSyncTime');
+      const headerBadge = document.getElementById('headerSyncStatusBadge');
+      if (syncTimeLabel) syncTimeLabel.innerText = "Syncing with Drive...";
+      if (headerBadge) headerBadge.innerText = "☁️ Syncing...";
+
+      try {
+        const fileId = await findDriveSyncFileId();
+        let remotePayload = fileId ? await downloadDriveSyncPayload(fileId) : null;
+        let localTimestamp = 0;
+
+        const localMetaRecord = await dbGet('metadata', metaKey('lastModifiedTimestamp'));
+        if (localMetaRecord && localMetaRecord.val) {
+          localTimestamp = localMetaRecord.val;
+        }
+
+        if (remotePayload && remotePayload.decks) {
+          const remoteTimestamp = remotePayload.syncTimestamp || 0;
+
+          // Merge Decks non-destructively
+          const localDecks = await dbGetAllRaw('decks');
+          const localDeckMap = new Map(localDecks.map(d => [d.id, d]));
+
+          for (const remDeck of remotePayload.decks || []) {
+            const existing = localDeckMap.get(remDeck.id);
+            if (!existing) {
+              await dbSave('decks', remDeck);
+            } else {
+              const remTime = new Date(remDeck.createdAt || 0).getTime();
+              const locTime = new Date(existing.createdAt || 0).getTime();
+              if (remTime > locTime || (remDeck.cards && remDeck.cards.length > (existing.cards ? existing.cards.length : 0))) {
+                await dbSave('decks', remDeck);
+              }
+            }
+          }
+
+          // Merge Mastery non-destructively
+          const localMastery = await dbGetAllRaw('mastery');
+          const localMasteryMap = new Map(localMastery.map(m => [m.id, m]));
+
+          for (const remM of remotePayload.mastery || []) {
+            const existing = localMasteryMap.get(remM.id);
+            if (!existing) {
+              await dbSave('mastery', remM);
+            } else {
+              const remTested = new Date(remM.lastTested || 0).getTime();
+              const locTested = new Date(existing.lastTested || 0).getTime();
+              if (remTested >= locTested) {
+                await dbSave('mastery', remM);
+              }
+            }
+          }
+
+          // Merge Syllabi & Metadata
+          for (const remMeta of remotePayload.metadata || []) {
+            if (!remMeta.key.includes('lastModifiedTimestamp')) {
+              await dbSave('metadata', remMeta);
+            }
+          }
+        }
+
+        // Upload combined master payload
+        const updatedMaster = await generateCompleteMasterPayload();
+        await uploadDriveSyncPayload(JSON.stringify(updatedMaster, null, 2), fileId);
+
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (syncTimeLabel) syncTimeLabel.innerText = `Last synced at ${timeStr}`;
+        if (headerBadge) {
+          headerBadge.innerText = "☁️ Cloud Synced";
+          headerBadge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-950/70 border border-emerald-800 text-emerald-300";
+        }
+
+        await refreshMasteryStatsUI();
+        await renderDeckListUI();
+        evaluateGatekeeperState();
+
+        if (interactive) {
+          alert(`Google Drive AppData Sync complete!\nYour decks, cards, and mastery are now synchronized with your Google account.`);
+        }
+      } catch (err) {
+        console.error("Sync error:", err);
+        if (syncTimeLabel) syncTimeLabel.innerText = "Sync failed";
+        if (headerBadge) {
+          headerBadge.innerText = "⚠️ Sync Error";
+          headerBadge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-red-950/70 border border-red-800 text-red-300";
+        }
+        if (interactive) alert("Sync failed: " + err.message);
+      }
+    }
     let currentSubjectName = localStorage.getItem('bar_active_subject') || 'Evidence';
     const DB_NAME = 'BarRecitUniversalMasterDB_v14_1';
     const DB_VERSION = 141;
@@ -1998,6 +2457,100 @@
     }
 
     // ---------------------------------------------------------------------------
+    // STATUTORY & ALAC HEALING + UNIFIED FILE EXPORT UTILITIES
+    // ---------------------------------------------------------------------------
+    function healTruncatedStatutoryText(text, topic) {
+      if (!text || text.trim().endsWith(':') || text.trim().endsWith('-') || text.length < 40) {
+        const canonical = retrieveVerbatimProvision(topic);
+        if (canonical && canonical.length > (text ? text.length : 0)) return canonical;
+      }
+      return text || '';
+    }
+
+    function healTruncatedAlacBasis(basis, fallback) {
+      if (!basis || basis.length < 30) {
+        return fallback || basis || '';
+      }
+      return basis;
+    }
+
+    async function exportWithSaveDialog(content, defaultFilename, mimeType = 'text/plain', fileDescription = 'File', extension = '') {
+      if (window.__TAURI__?.dialog && window.__TAURI__?.fs) {
+        try {
+          const filePath = await window.__TAURI__.dialog.save({
+            defaultPath: defaultFilename,
+            filters: extension ? [{ name: fileDescription, extensions: [extension.replace(/^\./, '')] }] : []
+          });
+          if (filePath) {
+            await window.__TAURI__.fs.writeTextFile(filePath, content);
+            return true;
+          }
+          return false;
+        } catch (err) {
+          console.warn("Tauri native save failed, using browser download fallback:", err);
+        }
+      }
+      // Standard browser download fallback
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = defaultFilename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return true;
+    }
+
+    // ---------------------------------------------------------------------------
+    // STATUTORY & ALAC HEALING + UNIFIED FILE EXPORT UTILITIES
+    // ---------------------------------------------------------------------------
+    function healTruncatedStatutoryText(text, topic) {
+      if (!text || text.trim().endsWith(':') || text.trim().endsWith('-') || text.length < 40) {
+        const canonical = retrieveVerbatimProvision(topic);
+        if (canonical && canonical.length > (text ? text.length : 0)) return canonical;
+      }
+      return text || '';
+    }
+
+    function healTruncatedAlacBasis(basis, fallback) {
+      if (!basis || basis.length < 30) {
+        return fallback || basis || '';
+      }
+      return basis;
+    }
+
+    async function exportWithSaveDialog(content, defaultFilename, mimeType = 'text/plain', fileDescription = 'File', extension = '') {
+      if (window.__TAURI__?.dialog && window.__TAURI__?.fs) {
+        try {
+          const filePath = await window.__TAURI__.dialog.save({
+            defaultPath: defaultFilename,
+            filters: extension ? [{ name: fileDescription, extensions: [extension.replace(/^\./, '')] }] : []
+          });
+          if (filePath) {
+            await window.__TAURI__.fs.writeTextFile(filePath, content);
+            return true;
+          }
+          return false;
+        } catch (err) {
+          console.warn("Tauri native save failed, using browser download fallback:", err);
+        }
+      }
+      // Standard browser download fallback
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = defaultFilename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return true;
+    }
+
+    // ---------------------------------------------------------------------------
     // HIGH-LEGIBILITY MICRO-FORMATTER FOR BENCHMARK BREAKDOWNS
     // ---------------------------------------------------------------------------
     function detectEnumerationFamily(para) {
@@ -2409,6 +2962,17 @@
       renderSourcesList();
       evaluateGatekeeperState();
 
+      // Check active Google OAuth session token
+      const cachedToken = sessionStorage.getItem('bar_drive_access_token');
+      const cachedEmail = sessionStorage.getItem('bar_drive_user_email');
+      if (cachedToken) {
+        gDriveAccessToken = cachedToken;
+        gDriveUserEmail = cachedEmail || 'Google Drive Connected';
+        updateAuthUIState(true);
+      } else {
+        updateAuthUIState(false);
+      }
+
       // Check disk sync on launch
       await checkForModernDiskSync(currentSubjectName);
 
@@ -2418,7 +2982,21 @@ if (syncScanInterval) clearInterval(syncScanInterval);
         checkForModernDiskSync(currentSubjectName);
       }, 60000);
 
-// Startup modal sequence: Video tutorial takes precedence on first launch
+// Background Google Drive synchronization pulse (every 4 minutes while app remains open)
+      setInterval(() => {
+        if (gDriveAccessToken && !state.isSessionActive && typeof syncWithGoogleDrive === 'function') {
+          syncWithGoogleDrive(false).catch(e => console.warn("Periodic Drive pulse:", e));
+        }
+      }, 240000);
+
+      // Background Google Drive synchronization pulse (every 4 minutes while app remains open)
+      setInterval(() => {
+        if (gDriveAccessToken && !state.isSessionActive && typeof syncWithGoogleDrive === 'function') {
+          syncWithGoogleDrive(false).catch(e => console.warn("Periodic Drive pulse:", e));
+        }
+      }, 240000);
+
+      // Startup modal sequence: Video tutorial takes precedence on first launch
 const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
       const hasSeenTextGuide = localStorage.getItem('bar_has_seen_tutorial');
 
@@ -3343,10 +3921,6 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
                 addCodalTopicUnique(`Tax Code (NIRC): Section ${sKey}`, `NIRC · Sec. ${sKey}`);
               } else if (subLower.includes("commercial")) {
                 addCodalTopicUnique(`Commercial Law: Section ${sKey}`, `Commercial Law · Sec. ${sKey}`);
-              } else if (isGenericAmMatter) {
-                // Keep the A.M. Matter cleanly isolated — do NOT default to Rule 130!
-                const amCleanTitle = raw.split(/(?:Section|Sec\.)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
-                addCodalTopicUnique(`${amCleanTitle}: Section ${sKey}`, `${amCleanTitle} · Sec. ${sKey}`);
               } else if (isGenericAmMatter) {
                 // Keep the A.M. Matter cleanly isolated — do NOT default to Rule 130!
                 const amCleanTitle = raw.split(/(?:Section|Sec\.)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
@@ -5247,10 +5821,10 @@ function extractCardParagraphsForExport(c) {
 // =========================================================================
     // VISUAL DECK MERGE & ACTIVE UNMERGE CONTROLLER
     // =========================================================================
+    let activeMergeSourceDecks = [];
 
     async function promptMergeDecks(preSelectedDeckId) {
-      activeMergeSourceDecks = await dbGetAll('decks');
-      if (activeMergeSourceDecks.length < 2) {
+      activeMergeSourceDecks = await dbGetAll('decks');      if (activeMergeSourceDecks.length < 2) {
         alert("You need at least two saved decks in this subject workspace to perform a merge.");
         return;
       }
@@ -5290,6 +5864,162 @@ function extractCardParagraphsForExport(c) {
 
     function closeMergeModal() {
       document.getElementById('deckMergeModal').classList.add('hidden');
+      editingMergeCardContext = null;
+    }
+
+    async function openStudioToEditMergeCard(originDeckId, cardIdxInOrigin) {
+      const deck = await dbGet('decks', originDeckId);
+      if (!deck || !deck.cards || !deck.cards[cardIdxInOrigin]) {
+        alert("Card could not be loaded from source deck.");
+        return;
+      }
+
+      const card = deck.cards[cardIdxInOrigin];
+      editingMergeCardContext = { originDeckId, cardIdxInOrigin, cardRef: card };
+
+      // Temporarily hide the Deck Merge modal while editing
+      const mergeModal = document.getElementById('deckMergeModal');
+      if (mergeModal) mergeModal.classList.add('hidden');
+
+      // Open the Card Studio modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Pre-fill Title, Citation, and Prompt
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || card.question || '';
+
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Populate Dynamic Sub-fields
+      if (card.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = card.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (card.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = card.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (card.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = card.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Configure Modal Actions
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Merge Card";
+
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
+    async function applyMergeCardUpdate() {
+      if (!editingMergeCardContext) return;
+      const { originDeckId, cardIdxInOrigin } = editingMergeCardContext;
+
+      const deck = await dbGet('decks', originDeckId);
+      if (!deck || !deck.cards || !deck.cards[cardIdxInOrigin]) return;
+
+      const targetCard = deck.cards[cardIdxInOrigin];
+      const topic = document.getElementById('customTopicInput')?.value.trim() || targetCard.topic || '';
+      const citation = document.getElementById('customCitationInput')?.value.trim() || '';
+      const question = document.getElementById('customQuestionPromptInput')?.value.trim() || '';
+
+      targetCard.topic = topic;
+      if (targetCard.case_title) targetCard.case_title = topic;
+      targetCard.citation = citation;
+      targetCard.rule_citation = citation;
+      targetCard.question_text = question;
+
+      const archetype = currentCardArchetype || 'CODAL';
+
+      if (archetype === 'CASE') {
+        targetCard.benchmark_fir = {
+          facts: document.getElementById('caseFactsInput')?.value.trim() || '',
+          issue: document.getElementById('caseIssueInput')?.value.trim() || '',
+          ruling: document.getElementById('caseRulingInput')?.value.trim() || '',
+          ratio_doctrine: document.getElementById('caseRatioInput')?.value.trim() || ''
+        };
+      } else if (archetype === 'CODAL') {
+        targetCard.benchmark_codal_breakdown = {
+          operative_rule_summary: document.getElementById('codalRuleInput')?.value.trim() || '',
+          elements_requisites: document.getElementById('codalRequisitesInput')?.value.trim() || '',
+          statutory_exceptions: document.getElementById('codalStatExceptionsInput')?.value.trim() || '',
+          jurisprudential_exceptions: document.getElementById('codalJurisExceptionsInput')?.value.trim() || '',
+          application_ratio: targetCard.benchmark_codal_breakdown?.application_ratio || ''
+        };
+        targetCard.codal_provision_text = targetCard.benchmark_codal_breakdown.operative_rule_summary;
+      } else if (archetype === 'ALAC') {
+        targetCard.benchmark_alac = {
+          p1_direct_answer: document.getElementById('alacAInput')?.value.trim() || '',
+          p2_legal_basis: document.getElementById('alacLInput')?.value.trim() || '',
+          p3_analysis: document.getElementById('alacAppInput')?.value.trim() || '',
+          p4_conclusion: document.getElementById('alacCInput')?.value.trim() || ''
+        };
+      } else {
+        const simple = document.getElementById('simpleAnswerInput')?.value.trim() || '';
+        targetCard.answer = simple;
+        targetCard.model_answer = simple;
+      }
+
+      // Persist changes to source deck in IndexedDB
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+
+      // Refresh memory list of merge decks
+      activeMergeSourceDecks = await dbGetAll('decks');
+
+      // Close Card Studio
+      document.getElementById('cardCreatorModal')?.classList.add('hidden');
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Save Card";
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.remove('hidden');
+
+      // Re-open and refresh Merge Preview modal
+      editingMergeCardContext = null;
+      const mergeModal = document.getElementById('deckMergeModal');
+      if (mergeModal) {
+        mergeModal.classList.remove('hidden');
+        if (typeof onMergeDeckSelectionChanged === 'function') onMergeDeckSelectionChanged();
+      }
     }
 
     function onMergeDeckSelectionChanged() {
@@ -5322,14 +6052,14 @@ function extractCardParagraphsForExport(c) {
       cardsA.forEach((c, idx) => {
         const sig = (c.question_text || c.topic || c.case_title || '').trim().toLowerCase();
         seen.add(sig);
-        mergedList.push({ card: c, sourceLabel: deckA.title, sourceColor: 'text-amber-300 border-amber-800 bg-amber-950/40', originId: deckA.id });
+        mergedList.push({ card: c, sourceLabel: deckA.title, sourceColor: 'text-amber-300 border-amber-800 bg-amber-950/40', originId: deckA.id, cardIdxInOrigin: idx });
       });
 
       cardsB.forEach((c, idx) => {
         const sig = (c.question_text || c.topic || c.case_title || '').trim().toLowerCase();
         if (isDedup && seen.has(sig)) return;
         seen.add(sig);
-        mergedList.push({ card: c, sourceLabel: deckB.title, sourceColor: 'text-sky-300 border-sky-800 bg-sky-950/40', originId: deckB.id });
+        mergedList.push({ card: c, sourceLabel: deckB.title, sourceColor: 'text-sky-300 border-sky-800 bg-sky-950/40', originId: deckB.id, cardIdxInOrigin: idx });
       });
 
       summaryBadge.innerText = `${mergedList.length} Cards Total (${cardsA.length} from Deck 1, ${cardsB.length} from Deck 2)`;
@@ -5347,6 +6077,9 @@ function extractCardParagraphsForExport(c) {
               <div class="flex items-center space-x-2 shrink-0">
                 ${dimTag ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-900 border border-slate-800 text-slate-400">${escapeHtml(dimTag)}</span>` : ''}
                 <span class="px-2 py-0.5 rounded text-[10px] font-mono border ${entry.sourceColor}">${escapeHtml(entry.sourceLabel)}</span>
+                <button type="button" onclick="openStudioToEditMergeCard('${entry.originId}', ${entry.cardIdxInOrigin})" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/60 rounded text-[10px] font-mono transition font-semibold" title="Edit this card before merging">
+                  ✏️ Edit
+                </button>
               </div>
             </div>
             <p class="text-slate-400 text-[11px] line-clamp-2 leading-relaxed">${escapeHtml(prompt)}</p>
@@ -5952,7 +6685,195 @@ async function getActiveCards() {
       updateScopePreviewUI(val);
     }
 
-    function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+    let editingDebriefIndex = null;
+
+    function renderDebriefTranscriptList() {
+      const container = document.getElementById('debriefContent');
+      if (!container) return;
+      if (!state.sessionTranscript || state.sessionTranscript.length === 0) {
+        container.innerHTML = '<div class="text-slate-500 italic text-center py-6">No recitation cards completed in this session yet.</div>';
+        return;
+      }
+
+      container.innerHTML = state.sessionTranscript.map((t, idx) => {
+        const ratingColor = t.rating === 'EXCELLENT' ? 'text-emerald-300 border-emerald-800 bg-emerald-950/40'
+          : t.rating === 'SATISFACTORY' ? 'text-amber-300 border-amber-800 bg-amber-950/40'
+          : 'text-red-300 border-red-800 bg-red-950/40';
+
+        return `
+          <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-bold text-slate-100 font-mono text-xs">${idx + 1}. ${escapeHtml(t.topic)}</span>
+              <div class="flex items-center space-x-2 shrink-0">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono border ${ratingColor} font-bold">${escapeHtml(t.rating)}</span>
+                <button type="button" onclick="openStudioToEditDebriefCard(${idx})" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/60 rounded text-[10px] font-mono transition font-semibold" title="Edit prompt and benchmark in transcript">
+                  ✏️ Edit
+                </button>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <p class="text-xs font-semibold text-slate-200">Q: ${escapeHtml(t.question)}</p>
+              <p class="text-xs text-slate-400">A: ${escapeHtml(t.studentAnswer)}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openDebriefModal() {
+      renderDebriefTranscriptList();
+      const stats = document.getElementById('debriefSummaryStats');
+      if (stats) stats.innerText = `Completed ${state.sessionTranscript.length} cards in this run.`;
+      document.getElementById('debriefModal')?.classList.remove('hidden');
+    }
+
+    function openStudioToEditDebriefCard(transcriptIndex) {
+      if (!state.sessionTranscript || !state.sessionTranscript[transcriptIndex]) return;
+
+      editingDebriefIndex = transcriptIndex;
+      const t = state.sessionTranscript[transcriptIndex];
+      const card = t.payload || { topic: t.topic, question_text: t.question };
+
+      // Temporarily hide the Debrief modal
+      document.getElementById('debriefModal')?.classList.add('hidden');
+
+      // Open the Card Studio modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Pre-fill Title, Citation, and Prompt
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || t.topic || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || t.question || '';
+
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Populate Dynamic Sub-fields
+      if (card.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = card.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (card.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = card.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (card.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = card.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Configure Modal Actions
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Debrief Card";
+
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
+    async function applyDebriefCardUpdate() {
+      if (editingDebriefIndex === null || !state.sessionTranscript[editingDebriefIndex]) return;
+
+      const t = state.sessionTranscript[editingDebriefIndex];
+      const payload = t.payload || {};
+
+      const topic = document.getElementById('customTopicInput')?.value.trim() || t.topic || '';
+      const citation = document.getElementById('customCitationInput')?.value.trim() || '';
+      const question = document.getElementById('customQuestionPromptInput')?.value.trim() || t.question || '';
+
+      t.topic = topic;
+      t.question = question;
+      payload.topic = topic;
+      payload.citation = citation;
+      payload.rule_citation = citation;
+      payload.question_text = question;
+
+      const archetype = currentCardArchetype || 'CODAL';
+
+      if (archetype === 'CASE') {
+        payload.benchmark_fir = {
+          facts: document.getElementById('caseFactsInput')?.value.trim() || '',
+          issue: document.getElementById('caseIssueInput')?.value.trim() || '',
+          ruling: document.getElementById('caseRulingInput')?.value.trim() || '',
+          ratio_doctrine: document.getElementById('caseRatioInput')?.value.trim() || ''
+        };
+      } else if (archetype === 'CODAL') {
+        payload.benchmark_codal_breakdown = {
+          operative_rule_summary: document.getElementById('codalRuleInput')?.value.trim() || '',
+          elements_requisites: document.getElementById('codalRequisitesInput')?.value.trim() || '',
+          statutory_exceptions: document.getElementById('codalStatExceptionsInput')?.value.trim() || '',
+          jurisprudential_exceptions: document.getElementById('codalJurisExceptionsInput')?.value.trim() || '',
+          application_ratio: payload.benchmark_codal_breakdown?.application_ratio || ''
+        };
+        payload.codal_provision_text = payload.benchmark_codal_breakdown.operative_rule_summary;
+      } else if (archetype === 'ALAC') {
+        payload.benchmark_alac = {
+          p1_direct_answer: document.getElementById('alacAInput')?.value.trim() || '',
+          p2_legal_basis: document.getElementById('alacLInput')?.value.trim() || '',
+          p3_analysis: document.getElementById('alacAppInput')?.value.trim() || '',
+          p4_conclusion: document.getElementById('alacCInput')?.value.trim() || ''
+        };
+      } else {
+        payload.answer = document.getElementById('simpleAnswerInput')?.value.trim() || '';
+        payload.model_answer = payload.answer;
+      }
+
+      t.payload = payload;
+
+      // Close Card Studio
+      document.getElementById('cardCreatorModal')?.classList.add('hidden');
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Save Card";
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.remove('hidden');
+
+      // Re-open and re-render Debrief modal
+      editingDebriefIndex = null;
+      openDebriefModal();
+    }
+
+    function toggleModal(id) {
+      if (id === 'debriefModal' && document.getElementById('debriefModal')?.classList.contains('hidden')) {
+        openDebriefModal();
+        return;
+      }
+      document.getElementById(id).classList.toggle('hidden');
+    }
     function updateWordCount() {
       const text = document.getElementById('studentAnswer').value.trim();
       document.getElementById('wordCount').innerText = `${text ? text.split(/\s+/).length : 0} words`;
@@ -5963,7 +6884,476 @@ async function getActiveCards() {
         e.preventDefault();
         if (state.studyMode === 'AI_EXAM') submitStudentAnswer();
         else revealInstantCramCard();
+        return;
       }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'e' || e.key === 'E')) {
+        e.preventDefault();
+        if (typeof editActiveCardInPlace === 'function') editActiveCardInPlace(false);
+      }
+    }
+
+    // Tracks if editing was initiated post-flip so Part 2C can re-open #evalModal
+
+     
+
+    // Tracks if editing was initiated post-flip so Part 2C can re-open #evalModal
+    let isEditingFromEvaluation = false;
+
+    // Global keyboard listener for modal navigation and post-flip editing
+    window.addEventListener('keydown', (e) => {
+      const evalModal = document.getElementById('evalModal');
+      const isEvalOpen = evalModal && !evalModal.classList.contains('hidden');
+      const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+
+      if (isEvalOpen && !isTyping) {
+        if (e.key === 'e' || e.key === 'E') {
+          e.preventDefault();
+          if (typeof editActiveCardInPlace === 'function') editActiveCardInPlace(true);
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          proceedToNextQuestion();
+        }
+      }
+    });
+
+     // Tracks if editing was initiated post-flip so Part 2C can re-open #evalModal
+
+    function editActiveCardInPlace(fromEvaluation = false) {
+      const card = state.activeCardItem;
+      if (!card) {
+        alert("No active card currently selected to edit.");
+        return;
+      }
+
+      isEditingFromEvaluation = fromEvaluation;
+
+      // Close evaluation modal if open so the user can edit cleanly
+      if (fromEvaluation) {
+        const evalModal = document.getElementById('evalModal');
+        if (evalModal) evalModal.classList.add('hidden');
+      }
+
+      // Open the Card Creator modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Title & Topic Fields
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || state.currentQuestionText || '';
+
+      const pkg = state.currentBenchmarkPayload || card;
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Determine Archetype & Pre-populate Dynamic Sub-fields
+      if (pkg.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = pkg.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (pkg.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = pkg.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (pkg.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = pkg.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Update button label to indicate In-Place Update mode
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Card In Place";
+
+      // Hide "Save & Add Another" during in-place editing to prevent duplicate insertions
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
+    // Tracks if editing was initiated post-flip so Part 2C can re-open #evalModal
+
+    function editActiveCardInPlace(fromEvaluation = false) {
+      const card = state.activeCardItem;
+      if (!card) {
+        alert("No active card currently selected to edit.");
+        return;
+      }
+
+      isEditingFromEvaluation = fromEvaluation;
+
+      // Close evaluation modal if open so the user can edit cleanly
+      if (fromEvaluation) {
+        const evalModal = document.getElementById('evalModal');
+        if (evalModal) evalModal.classList.add('hidden');
+      }
+
+      // Open the Card Creator modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Title & Topic Fields
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || state.currentQuestionText || '';
+
+      const pkg = state.currentBenchmarkPayload || card;
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Determine Archetype & Pre-populate Dynamic Sub-fields
+      if (pkg.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = pkg.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (pkg.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = pkg.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (pkg.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = pkg.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Update button label to indicate In-Place Update mode
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Card In Place";
+
+      // Hide "Save & Add Another" during in-place editing to prevent duplicate insertions
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
+    // Tracks if editing was initiated post-flip so Part 2C can re-open #evalModal
+
+    function editActiveCardInPlace(fromEvaluation = false) {
+      const card = state.activeCardItem;
+      if (!card) {
+        alert("No active card currently selected to edit.");
+        return;
+      }
+
+      isEditingFromEvaluation = fromEvaluation;
+
+      // Close evaluation modal if open so the user can edit cleanly
+      if (fromEvaluation) {
+        const evalModal = document.getElementById('evalModal');
+        if (evalModal) evalModal.classList.add('hidden');
+      }
+
+      // Open the Card Creator modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Title & Topic Fields
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || state.currentQuestionText || '';
+
+      const pkg = state.currentBenchmarkPayload || card;
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Determine Archetype & Pre-populate Dynamic Sub-fields
+      if (pkg.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = pkg.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (pkg.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = pkg.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (pkg.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = pkg.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Update button label to indicate In-Place Update mode
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Card In Place";
+
+      // Hide "Save & Add Another" during in-place editing to prevent duplicate insertions
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
+    // Tracks if editing was initiated post-flip so Part 2C can re-open #evalModal
+
+    function editActiveCardInPlace(fromEvaluation = false) {
+      const card = state.activeCardItem;
+      if (!card) {
+        alert("No active card currently selected to edit.");
+        return;
+      }
+
+      isEditingFromEvaluation = fromEvaluation;
+
+      // Close evaluation modal if open so the user can edit cleanly
+      if (fromEvaluation) {
+        const evalModal = document.getElementById('evalModal');
+        if (evalModal) evalModal.classList.add('hidden');
+      }
+
+      // Open the Card Creator modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Title & Topic Fields
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || state.currentQuestionText || '';
+
+      const pkg = state.currentBenchmarkPayload || card;
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Determine Archetype & Pre-populate Dynamic Sub-fields
+      if (pkg.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = pkg.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (pkg.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = pkg.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (pkg.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = pkg.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Update button label to indicate In-Place Update mode
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Card In Place";
+
+      // Hide "Save & Add Another" during in-place editing to prevent duplicate insertions
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
+    // Tracks if editing was initiated post-flip so Part 2C can re-open #evalModal
+
+    function editActiveCardInPlace(fromEvaluation = false) {
+      const card = state.activeCardItem;
+      if (!card) {
+        alert("No active card currently selected to edit.");
+        return;
+      }
+
+      isEditingFromEvaluation = fromEvaluation;
+
+      // Close evaluation modal if open so the user can edit cleanly
+      if (fromEvaluation) {
+        const evalModal = document.getElementById('evalModal');
+        if (evalModal) evalModal.classList.add('hidden');
+      }
+
+      // Open the Card Creator modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Title & Topic Fields
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || state.currentQuestionText || '';
+
+      const pkg = state.currentBenchmarkPayload || card;
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Determine Archetype & Pre-populate Dynamic Sub-fields
+      if (pkg.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = pkg.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (pkg.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = pkg.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (pkg.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = pkg.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Update button label to indicate In-Place Update mode
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Card In Place";
+
+      // Hide "Save & Add Another" during in-place editing to prevent duplicate insertions
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
     }
 
     function setupTimer() {
@@ -6143,6 +7533,12 @@ async function getActiveCards() {
         val: now
       });
       await autoSaveSubjectToTauriDisk();
+
+      // Background Google Drive AppData sync if authenticated
+      if (gDriveAccessToken && typeof syncWithGoogleDrive === 'function') {
+        syncWithGoogleDrive(false).catch(e => console.warn("Background Drive sync:", e));
+      }
+
       return now;
     }
 
@@ -6713,7 +8109,7 @@ async function getActiveCards() {
     }
 
     // Automatically retrieves active cards from state pools or local storage
-    function getActiveCards() {
+    async function getActiveCards() {
       if (state.activeDeckCardsPool && state.activeDeckCardsPool.length) return state.activeDeckCardsPool;
       if (state.activeAgenda && state.activeAgenda.length) return state.activeAgenda;
       if (state.allUnbundledPool && state.allUnbundledPool.length) return state.allUnbundledPool;
@@ -6981,8 +8377,6 @@ async function exportCardsAsDoc(cardsArray) {
       alert(`Success! Created independent copy: "${newDeck.title}" (${newDeck.cards.length} cards).`);
     }
 
-    let activeMergeSourceDecks = [];
-
     async function promptMergeDecks(preSelectedDeckId) {
       activeMergeSourceDecks = await dbGetAll('decks');
       if (activeMergeSourceDecks.length < 2) {
@@ -7023,8 +8417,166 @@ async function exportCardsAsDoc(cardsArray) {
       onMergeDeckSelectionChanged();
     }
 
+    let editingMergeCardContext = null;
+
     function closeMergeModal() {
       document.getElementById('deckMergeModal').classList.add('hidden');
+      editingMergeCardContext = null;
+    }
+
+    async function openStudioToEditMergeCard(originDeckId, cardIdxInOrigin) {
+      const deck = await dbGet('decks', originDeckId);
+      if (!deck || !deck.cards || !deck.cards[cardIdxInOrigin]) {
+        alert("Card could not be loaded from source deck.");
+        return;
+      }
+
+      const card = deck.cards[cardIdxInOrigin];
+      editingMergeCardContext = { originDeckId, cardIdxInOrigin, cardRef: card };
+
+      // Temporarily hide the Deck Merge modal while editing
+      const mergeModal = document.getElementById('deckMergeModal');
+      if (mergeModal) mergeModal.classList.add('hidden');
+
+      // Open the Card Studio modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Pre-fill Title, Citation, and Prompt
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || card.question || '';
+
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Populate Dynamic Sub-fields
+      if (card.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = card.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (card.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = card.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (card.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = card.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Configure Modal Actions
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Merge Card";
+
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
+    async function applyMergeCardUpdate() {
+      if (!editingMergeCardContext) return;
+      const { originDeckId, cardIdxInOrigin } = editingMergeCardContext;
+
+      const deck = await dbGet('decks', originDeckId);
+      if (!deck || !deck.cards || !deck.cards[cardIdxInOrigin]) return;
+
+      const targetCard = deck.cards[cardIdxInOrigin];
+      const topic = document.getElementById('customTopicInput')?.value.trim() || targetCard.topic || '';
+      const citation = document.getElementById('customCitationInput')?.value.trim() || '';
+      const question = document.getElementById('customQuestionPromptInput')?.value.trim() || '';
+
+      targetCard.topic = topic;
+      if (targetCard.case_title) targetCard.case_title = topic;
+      targetCard.citation = citation;
+      targetCard.rule_citation = citation;
+      targetCard.question_text = question;
+
+      const archetype = currentCardArchetype || 'CODAL';
+
+      if (archetype === 'CASE') {
+        targetCard.benchmark_fir = {
+          facts: document.getElementById('caseFactsInput')?.value.trim() || '',
+          issue: document.getElementById('caseIssueInput')?.value.trim() || '',
+          ruling: document.getElementById('caseRulingInput')?.value.trim() || '',
+          ratio_doctrine: document.getElementById('caseRatioInput')?.value.trim() || ''
+        };
+      } else if (archetype === 'CODAL') {
+        targetCard.benchmark_codal_breakdown = {
+          operative_rule_summary: document.getElementById('codalRuleInput')?.value.trim() || '',
+          elements_requisites: document.getElementById('codalRequisitesInput')?.value.trim() || '',
+          statutory_exceptions: document.getElementById('codalStatExceptionsInput')?.value.trim() || '',
+          jurisprudential_exceptions: document.getElementById('codalJurisExceptionsInput')?.value.trim() || '',
+          application_ratio: targetCard.benchmark_codal_breakdown?.application_ratio || ''
+        };
+        targetCard.codal_provision_text = targetCard.benchmark_codal_breakdown.operative_rule_summary;
+      } else if (archetype === 'ALAC') {
+        targetCard.benchmark_alac = {
+          p1_direct_answer: document.getElementById('alacAInput')?.value.trim() || '',
+          p2_legal_basis: document.getElementById('alacLInput')?.value.trim() || '',
+          p3_analysis: document.getElementById('alacAppInput')?.value.trim() || '',
+          p4_conclusion: document.getElementById('alacCInput')?.value.trim() || ''
+        };
+      } else {
+        const simple = document.getElementById('simpleAnswerInput')?.value.trim() || '';
+        targetCard.answer = simple;
+        targetCard.model_answer = simple;
+      }
+
+      // Persist changes to source deck in IndexedDB
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+
+      // Refresh memory list of merge decks
+      activeMergeSourceDecks = await dbGetAll('decks');
+
+      // Close Card Studio
+      document.getElementById('cardCreatorModal')?.classList.add('hidden');
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Save Card";
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.remove('hidden');
+
+      // Re-open and refresh Merge Preview modal
+      editingMergeCardContext = null;
+      const mergeModal = document.getElementById('deckMergeModal');
+      if (mergeModal) {
+        mergeModal.classList.remove('hidden');
+        if (typeof onMergeDeckSelectionChanged === 'function') onMergeDeckSelectionChanged();
+      }
     }
 
     function onMergeDeckSelectionChanged() {
@@ -7266,6 +8818,14 @@ async function exportCardsAsDoc(cardsArray) {
             </div>
 
             <div class="flex items-center space-x-1.5 shrink-0">
+            <!-- EDIT CARD IN PLACE -->
+            <button type="button" onclick="openStudioToEditBrowserCard('${currentBrowsingDeckId}', ${idx})" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/60 rounded text-[10px] font-mono transition font-semibold" title="Edit this card in place">
+              ✏️ Edit
+            </button>
+            <!-- EDIT CARD IN PLACE -->
+            <button type="button" onclick="openStudioToEditBrowserCard('${currentBrowsingDeckId}', ${idx})" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/60 rounded text-[10px] font-mono transition font-semibold" title="Edit this card in place">
+              ✏️ Edit
+            </button>
               <button onclick="editCardFromBrowser('${deck.id}', ${idx})" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded font-mono text-[11px] transition" title="Edit this card's question, elements, or model answers">
                 ✏️
               </button>
@@ -7346,6 +8906,174 @@ async function exportCardsAsDoc(cardsArray) {
     let currentCardArchetype = 'CODAL';
     let editingCardContext = null;
 
+    async function openStudioToEditBrowserCard(deckId, cardIndex) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards || !deck.cards[cardIndex]) {
+        alert("Card could not be loaded from deck.");
+        return;
+      }
+
+      const card = deck.cards[cardIndex];
+      editingBrowserCardContext = { deckId, cardIndex, cardRef: card };
+
+      // Temporarily hide the Deck Browser modal while editing
+      const browserModal = document.getElementById('deckBrowserModal');
+      if (browserModal) browserModal.classList.add('hidden');
+
+      // Open the Card Studio modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Pre-fill Title, Citation, and Prompt
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || card.question || '';
+
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Detect Archetype and Populate Fields
+      if (card.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = card.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (card.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = card.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (card.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = card.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Configure Modal Actions
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Deck Card";
+
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
+    let editingBrowserCardContext = null;
+
+    async function openStudioToEditBrowserCard(deckId, cardIndex) {
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards || !deck.cards[cardIndex]) {
+        alert("Card could not be loaded from deck.");
+        return;
+      }
+
+      const card = deck.cards[cardIndex];
+      editingBrowserCardContext = { deckId, cardIndex, cardRef: card };
+
+      // Temporarily hide the Deck Browser modal while editing
+      const browserModal = document.getElementById('deckBrowserModal');
+      if (browserModal) browserModal.classList.add('hidden');
+
+      // Open the Card Studio modal
+      if (typeof openCardCreatorModal === 'function') {
+        openCardCreatorModal();
+      } else {
+        document.getElementById('cardCreatorModal')?.classList.remove('hidden');
+      }
+
+      // Pre-fill Title, Citation, and Prompt
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = card.question_text || card.question || '';
+
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      // Detect Archetype and Populate Fields
+      if (card.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = card.benchmark_fir || {};
+        const fInput = document.getElementById('caseFactsInput');
+        const iInput = document.getElementById('caseIssueInput');
+        const rInput = document.getElementById('caseRulingInput');
+        const ratioInput = document.getElementById('caseRatioInput');
+
+        if (fInput) fInput.value = fir.facts || '';
+        if (iInput) iInput.value = fir.issue || '';
+        if (rInput) rInput.value = fir.ruling || '';
+        if (ratioInput) ratioInput.value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (card.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = card.benchmark_codal_breakdown || {};
+        const ruleInput = document.getElementById('codalRuleInput');
+        const reqInput = document.getElementById('codalRequisitesInput');
+        const statInput = document.getElementById('codalStatExceptionsInput');
+        const jurisInput = document.getElementById('codalJurisExceptionsInput');
+
+        if (ruleInput) ruleInput.value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (reqInput) reqInput.value = b.elements_requisites || '';
+        if (statInput) statInput.value = b.statutory_exceptions || '';
+        if (jurisInput) jurisInput.value = b.jurisprudential_exceptions || '';
+      } else if (card.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = card.benchmark_alac || {};
+        const aInput = document.getElementById('alacAInput');
+        const lInput = document.getElementById('alacLInput');
+        const appInput = document.getElementById('alacAppInput');
+        const cInput = document.getElementById('alacCInput');
+
+        if (aInput) aInput.value = alac.p1_direct_answer || '';
+        if (lInput) lInput.value = alac.p2_legal_basis || '';
+        if (appInput) appInput.value = alac.p3_analysis || '';
+        if (cInput) cInput.value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        const simpleInput = document.getElementById('simpleAnswerInput');
+        if (simpleInput) simpleInput.value = card.answer || card.model_answer || '';
+      }
+
+      // Configure Modal Actions
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Deck Card";
+
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
     function openStudioForSpecificDeck(deckId) {
       openCardCreatorModal(deckId);
     }
@@ -7414,8 +9142,9 @@ async function exportCardsAsDoc(cardsArray) {
     }
 
     function setCardArchetype(arch) {
-      currentCardArchetype = arch;
-      const archetypes = ['CODAL', 'CASE', 'ALAC', 'PROCEDURAL', 'SIMPLE'];
+  currentCardArchetype = arch;
+  window._activeStudioArchetype = arch;
+  const archetypes = ['CODAL', 'CASE', 'ALAC', 'PROCEDURAL', 'SIMPLE'];
 
       archetypes.forEach(a => {
         const btn = document.getElementById('archBtn_' + a);
@@ -7481,12 +9210,209 @@ async function exportCardsAsDoc(cardsArray) {
       document.getElementById('cardCreatorModal')?.classList.remove('hidden');
     }
 
-    function closeCardCreatorModal() {
-      editingCardContext = null;
-      document.getElementById('cardCreatorModal')?.classList.add('hidden');
-      document.getElementById('clozeFloatingToolbar')?.classList.add('hidden');
-    }
+function closeCardCreatorModal() {
+  editingCardContext = null;
+  document.getElementById('cardCreatorModal')?.classList.add('hidden');
+  document.getElementById('clozeFloatingToolbar')?.classList.add('hidden');
 
+  // Reset button states
+  const saveBtn = document.getElementById('saveAndCloseCardBtn');
+  if (saveBtn) saveBtn.innerText = "Save Card";
+  const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+  if (addAnotherBtn) addAnotherBtn.classList.remove('hidden');
+
+  // Re-open evaluation modal if edit was triggered from there
+  if (isEditingFromEvaluation) {
+    isEditingFromEvaluation = false;
+    const evalModal = document.getElementById('evalModal');
+    if (evalModal) evalModal.classList.remove('hidden');
+  }
+}
+
+async function applyInPlaceCardUpdate() {
+  const card = state.activeCardItem;
+  if (!card) return;
+
+  const topic = document.getElementById('customTopicInput')?.value.trim() || card.topic || card.case_title || '';
+  const citation = document.getElementById('customCitationInput')?.value.trim() || '';
+  const question = document.getElementById('customQuestionPromptInput')?.value.trim() || state.currentQuestionText || '';
+
+  // Update core fields
+  card.topic = topic;
+  if (card.case_title) card.case_title = topic;
+  card.citation = citation;
+  card.rule_citation = citation;
+  card.question_text = question;
+  state.currentQuestionText = question;
+
+  // Use the active archetype from your existing variable
+  const archetype = currentCardArchetype || 'CODAL';
+
+  if (archetype === 'CASE') {
+    const fir = {
+      facts: document.getElementById('caseFactsInput')?.value.trim() || '',
+      issue: document.getElementById('caseIssueInput')?.value.trim() || '',
+      ruling: document.getElementById('caseRulingInput')?.value.trim() || '',
+      ratio_doctrine: document.getElementById('caseRatioInput')?.value.trim() || ''
+    };
+    card.benchmark_fir = fir;
+    if (state.currentBenchmarkPayload) state.currentBenchmarkPayload.benchmark_fir = fir;
+  } else if (archetype === 'CODAL') {
+    const codal = {
+      operative_rule_summary: document.getElementById('codalRuleInput')?.value.trim() || '',
+      elements_requisites: document.getElementById('codalRequisitesInput')?.value.trim() || '',
+      statutory_exceptions: document.getElementById('codalStatExceptionsInput')?.value.trim() || '',
+      jurisprudential_exceptions: document.getElementById('codalJurisExceptionsInput')?.value.trim() || '',
+      application_ratio: card.benchmark_codal_breakdown?.application_ratio || ''
+    };
+    card.benchmark_codal_breakdown = codal;
+    card.codal_provision_text = codal.operative_rule_summary;
+    if (state.currentBenchmarkPayload) {
+      state.currentBenchmarkPayload.benchmark_codal_breakdown = codal;
+      state.currentBenchmarkPayload.codal_provision_text = codal.operative_rule_summary;
+    }
+  } else if (archetype === 'ALAC') {
+    const alac = {
+      p1_direct_answer: document.getElementById('alacAInput')?.value.trim() || '',
+      p2_legal_basis: document.getElementById('alacLInput')?.value.trim() || '',
+      p3_analysis: document.getElementById('alacAppInput')?.value.trim() || '',
+      p4_conclusion: document.getElementById('alacCInput')?.value.trim() || ''
+    };
+    card.benchmark_alac = alac;
+    if (state.currentBenchmarkPayload) state.currentBenchmarkPayload.benchmark_alac = alac;
+  } else {
+    const simple = document.getElementById('simpleAnswerInput')?.value.trim() || '';
+    card.answer = simple;
+    card.model_answer = simple;
+  }
+
+  // 1. Update in active memory pools
+  const qIdx = state.currentQuestionIndex - 1;
+  if (state.activeAgenda && state.activeAgenda[qIdx]) {
+    state.activeAgenda[qIdx] = { ...state.activeAgenda[qIdx], ...card };
+  }
+
+  const poolIdx = state.activeDeckCardsPool.findIndex(c =>
+    (c.topic === card.topic || c.case_title === card.case_title) && c.dimensionId === card.dimensionId
+  );
+  if (poolIdx !== -1) {
+    state.activeDeckCardsPool[poolIdx] = { ...card };
+  }
+
+  // 2. If session belongs to a saved deck, mutate in IndexedDB
+  if (state.activeDeckTitle) {
+    const decks = await dbGetAll('decks');
+    const activeDeck = decks.find(d => d.title === state.activeDeckTitle);
+    if (activeDeck && Array.isArray(activeDeck.cards)) {
+      const dCardIdx = activeDeck.cards.findIndex(c =>
+        (c.topic === card.topic || c.case_title === card.case_title) && c.dimensionId === card.dimensionId
+      );
+      if (dCardIdx !== -1) {
+        activeDeck.cards[dCardIdx] = { ...card };
+        await dbSave('decks', activeDeck);
+      }
+    }
+  }
+
+  // 3. Update active card UI
+  const qContainer = document.getElementById('questionContainer');
+  if (qContainer) qContainer.innerText = question;
+
+  const topicBadge = document.getElementById('activeTopicName');
+  if (topicBadge) topicBadge.innerText = `${topic} (${citation || currentSubjectName})`;
+
+  // 4. Trigger cloud sync and timestamps
+  await stampSubjectModifiedTimestamp();
+
+  // 5. Close editor
+  document.getElementById('cardCreatorModal')?.classList.add('hidden');
+  const saveBtn = document.getElementById('saveAndCloseCardBtn');
+  if (saveBtn) saveBtn.innerText = "Save Card";
+  const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+  if (addAnotherBtn) addAnotherBtn.classList.remove('hidden');
+
+  // 6. If opened from evaluation, re-render evaluation benchmark with updated values and re-open modal
+  if (isEditingFromEvaluation) {
+    isEditingFromEvaluation = false;
+    const lastTranscript = state.sessionTranscript[state.sessionTranscript.length - 1];
+    if (lastTranscript) {
+      renderEvaluation({
+        rating: lastTranscript.rating || 'SATISFACTORY',
+        critique: lastTranscript.critique || 'Card updated in place.',
+        missed_details: 'Benchmark breakdown refreshed.',
+        correction_polish: 'Ready for next recitation.'
+      });
+    }
+  }
+}
+async function applyDeckBrowserCardUpdate() {
+      if (!editingBrowserCardContext) return;
+      const { deckId, cardIndex } = editingBrowserCardContext;
+
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards || !deck.cards[cardIndex]) return;
+
+      const targetCard = deck.cards[cardIndex];
+      const topic = document.getElementById('customTopicInput')?.value.trim() || targetCard.topic || '';
+      const citation = document.getElementById('customCitationInput')?.value.trim() || '';
+      const question = document.getElementById('customQuestionPromptInput')?.value.trim() || '';
+
+      targetCard.topic = topic;
+      if (targetCard.case_title) targetCard.case_title = topic;
+      targetCard.citation = citation;
+      targetCard.rule_citation = citation;
+      targetCard.question_text = question;
+
+      const archetype = currentCardArchetype || 'CODAL';
+
+      if (archetype === 'CASE') {
+        targetCard.benchmark_fir = {
+          facts: document.getElementById('caseFactsInput')?.value.trim() || '',
+          issue: document.getElementById('caseIssueInput')?.value.trim() || '',
+          ruling: document.getElementById('caseRulingInput')?.value.trim() || '',
+          ratio_doctrine: document.getElementById('caseRatioInput')?.value.trim() || ''
+        };
+      } else if (archetype === 'CODAL') {
+        targetCard.benchmark_codal_breakdown = {
+          operative_rule_summary: document.getElementById('codalRuleInput')?.value.trim() || '',
+          elements_requisites: document.getElementById('codalRequisitesInput')?.value.trim() || '',
+          statutory_exceptions: document.getElementById('codalStatExceptionsInput')?.value.trim() || '',
+          jurisprudential_exceptions: document.getElementById('codalJurisExceptionsInput')?.value.trim() || '',
+          application_ratio: targetCard.benchmark_codal_breakdown?.application_ratio || ''
+        };
+        targetCard.codal_provision_text = targetCard.benchmark_codal_breakdown.operative_rule_summary;
+      } else if (archetype === 'ALAC') {
+        targetCard.benchmark_alac = {
+          p1_direct_answer: document.getElementById('alacAInput')?.value.trim() || '',
+          p2_legal_basis: document.getElementById('alacLInput')?.value.trim() || '',
+          p3_analysis: document.getElementById('alacAppInput')?.value.trim() || '',
+          p4_conclusion: document.getElementById('alacCInput')?.value.trim() || ''
+        };
+      } else {
+        const simple = document.getElementById('simpleAnswerInput')?.value.trim() || '';
+        targetCard.answer = simple;
+        targetCard.model_answer = simple;
+      }
+
+      // Persist to IndexedDB
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+
+      // Close Card Studio
+      document.getElementById('cardCreatorModal')?.classList.add('hidden');
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Save Card";
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.remove('hidden');
+
+      // Re-open and refresh Deck Browser modal
+      editingBrowserCardContext = null;
+      const browserModal = document.getElementById('deckBrowserModal');
+      if (browserModal) {
+        browserModal.classList.remove('hidden');
+        if (typeof renderBrowserCardsList === 'function') renderBrowserCardsList();
+      }
+    }
     async function editCardFromBrowser(deckId, cardIndex) {
       const deck = await dbGet('decks', deckId);
       if (!deck || !deck.cards || !deck.cards[cardIndex]) return;
@@ -7529,67 +9455,48 @@ async function exportCardsAsDoc(cardsArray) {
       }
     }
 
-    async function editActiveCardInPlace() {
-      const currentItem = state.activeAgenda[state.currentQuestionIndex - 1];
-      if (!currentItem) {
-        alert("No active recitation card currently loaded to edit.");
+async function saveCustomCard(addAnother = false) {
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+
+      // 1. Recitation active card in-place update handler
+      if (saveBtn && saveBtn.innerText === "Update Card In Place") {
+        await applyInPlaceCardUpdate();
         return;
       }
 
-      await openCardCreatorModal();
-
-      let activeDeckId = null;
-      if (state.activeDeckTitle) {
-        const allDecks = await dbGetAll('decks');
-        const matchedDeck = allDecks.find(d => d.title === state.activeDeckTitle);
-        if (matchedDeck) activeDeckId = matchedDeck.id;
-      }
-
-      editingCardContext = {
-        isLiveActiveCard: true,
-        itemRef: currentItem,
-        deckId: activeDeckId
-      };
-
-      document.getElementById('cardCreatorModalTitle').innerText = `Live Recitation Editor · Card #${state.currentQuestionIndex}: ${currentItem.topic || currentItem.case_title}`;
-      document.getElementById('saveAndCloseCardBtn').innerText = "Update & Apply In-Place";
-      document.getElementById('saveAndAddAnotherBtn')?.classList.add('hidden');
-      document.getElementById('cardDestinationDeckSelect')?.setAttribute('disabled', 'true');
-
-      document.getElementById('customTopicInput').value = currentItem.topic || currentItem.case_title || '';
-      document.getElementById('customCitationInput').value = currentItem.rule_citation || currentItem.citation || '';
-      document.getElementById('customQuestionPromptInput').value = currentItem.question_text || state.currentQuestionText || '';
-
-      if (currentItem.benchmark_fir) {
-        setCardArchetype('CASE');
-        document.getElementById('caseFactsInput').value = currentItem.benchmark_fir.facts || '';
-        document.getElementById('caseIssueInput').value = currentItem.benchmark_fir.issue || '';
-        document.getElementById('caseRulingInput').value = currentItem.benchmark_fir.ruling || '';
-        document.getElementById('caseRatioInput').value = currentItem.benchmark_fir.ratio_doctrine || '';
-      } else if (currentItem.benchmark_codal_breakdown) {
-        setCardArchetype('CODAL');
-        document.getElementById('codalRuleInput').value = currentItem.codal_provision_text || currentItem.benchmark_codal_breakdown.operative_rule_summary || '';
-        document.getElementById('codalRequisitesInput').value = currentItem.benchmark_codal_breakdown.elements_requisites || '';
-        document.getElementById('codalStatExceptionsInput').value = currentItem.benchmark_codal_breakdown.statutory_exceptions || '';
-        document.getElementById('codalJurisExceptionsInput').value = currentItem.benchmark_codal_breakdown.jurisprudential_exceptions || '';
-      } else if (currentItem.benchmark_alac) {
-        if (currentItem.dimensionId === 10) setCardArchetype('PROCEDURAL');
-        else setCardArchetype('ALAC');
-        document.getElementById('alacAInput').value = currentItem.benchmark_alac.p1_direct_answer || '';
-        document.getElementById('alacLInput').value = currentItem.benchmark_alac.p2_legal_basis || '';
-        document.getElementById('alacAppInput').value = currentItem.benchmark_alac.p3_analysis || '';
-        document.getElementById('alacCInput').value = currentItem.benchmark_alac.p4_conclusion || '';
-      } else {
-        setCardArchetype('SIMPLE');
-        document.getElementById('simpleAnswerInput').value = currentItem.model_answer || currentItem.answer || '';
-      }
-    }
-
-    async function saveCustomCard(addAnother = false) {
-      if (currentCardStudioMode === 'BULK') {
-        await processBulkImport();
+      // 2. Deck browser card in-place update handler
+      if (saveBtn && saveBtn.innerText === "Update Deck Card" && editingBrowserCardContext) {
+        await applyDeckBrowserCardUpdate();
         return;
       }
+
+      // 3. Deck merge preview card update handler
+      if (saveBtn && saveBtn.innerText === "Update Merge Card" && editingMergeCardContext) {
+        await applyMergeCardUpdate();
+        return;
+      }
+
+      // 4. Session debrief transcript card update handler
+      if (saveBtn && saveBtn.innerText === "Update Debrief Card" && editingDebriefIndex !== null) {
+        await applyDebriefCardUpdate();
+        return;
+      }
+
+      // 3. Deck merge preview card update handler
+      if (saveBtn && saveBtn.innerText === "Update Merge Card" && editingMergeCardContext) {
+        await applyMergeCardUpdate();
+        return;
+      }
+
+      // 4. Session debrief transcript card update handler
+      if (saveBtn && saveBtn.innerText === "Update Debrief Card" && editingDebriefIndex !== null) {
+        await applyDebriefCardUpdate();
+        return;
+      }
+  if (currentCardStudioMode === 'BULK') {
+    await processBulkImport();
+    return;
+  }
 
       const topic = document.getElementById('customTopicInput').value.trim();
       const citation = document.getElementById('customCitationInput').value.trim();
@@ -7970,5 +9877,141 @@ async function exportCardsAsDoc(cardsArray) {
       return cleanBasis;
     }
   </script>
+<!-- ========================================================================= -->
+  <!-- GOOGLE DRIVE SYNC HEALTH & DIAGNOSTIC MODAL                               -->
+  <!-- ========================================================================= -->
+  <div id="driveSyncHealthModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[80] hidden flex items-center justify-center p-3 md:p-6">
+    <div class="bg-slate-900 border border-sky-600/70 rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden">
+      <!-- HEADER -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-3">
+          <span class="w-8 h-8 rounded bg-sky-600 flex items-center justify-center font-mono font-bold text-slate-950 text-base shadow">☁️</span>
+          <div>
+            <h2 class="font-serif font-bold text-slate-100 text-base">Google Drive AppData Sync Diagnostics</h2>
+            <p class="text-[11px] text-slate-400 font-mono">Zero-Server · Private Cross-Device State</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeDriveHealthModal()" class="text-slate-400 hover:text-slate-200 text-xl leading-none">&times;</button>
+      </div>
+
+      <!-- STATUS BODY -->
+      <div class="p-6 space-y-4 text-xs font-mono">
+        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Account Connection:</span>
+            <span id="diagAccountStatus" class="font-bold text-amber-400">Not Connected</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Drive Sync Target:</span>
+            <span class="text-slate-300">appDataFolder/BarRecitMasterBackup_DriveSync.json</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Local Stamped Modified:</span>
+            <span id="diagLocalTimestamp" class="text-slate-300">Never</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Remote Cloud File Modified:</span>
+            <span id="diagRemoteTimestamp" class="text-slate-300">Checking...</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Decks in Sync Payload:</span>
+            <span id="diagDeckCount" class="text-emerald-400 font-bold">0 Decks</span>
+          </div>
+        </div>
+
+        <div id="diagConflictBox" class="hidden p-3.5 rounded-xl bg-amber-950/40 border border-amber-700 text-amber-200 space-y-1.5">
+          <span class="font-bold block flex items-center space-x-1.5">
+            <span>⚠️ Cloud Version Newer</span>
+          </span>
+          <p class="text-[11px] leading-relaxed text-slate-300">
+            A newer backup exists on Google Drive. Running a sync will non-destructively merge missing decks and higher mastery scores into this device.
+          </p>
+        </div>
+      </div>
+
+      <!-- FOOTER ACTIONS -->
+      <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+        <button type="button" onclick="closeDriveHealthModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-mono transition">
+          Close
+        </button>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="forceDriveHealthCheck()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-700/60 rounded-lg text-xs font-mono font-bold transition">
+            Scan Drive File
+          </button>
+          <button type="button" onclick="syncWithGoogleDrive(true)" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow">
+            Sync & Auto-Merge Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- ========================================================================= -->
+  <!-- GOOGLE DRIVE SYNC HEALTH & DIAGNOSTIC MODAL                               -->
+  <!-- ========================================================================= -->
+  <div id="driveSyncHealthModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[80] hidden flex items-center justify-center p-3 md:p-6">
+    <div class="bg-slate-900 border border-sky-600/70 rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden">
+      <!-- HEADER -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-3">
+          <span class="w-8 h-8 rounded bg-sky-600 flex items-center justify-center font-mono font-bold text-slate-950 text-base shadow">☁️</span>
+          <div>
+            <h2 class="font-serif font-bold text-slate-100 text-base">Google Drive AppData Sync Diagnostics</h2>
+            <p class="text-[11px] text-slate-400 font-mono">Zero-Server · Private Cross-Device State</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeDriveHealthModal()" class="text-slate-400 hover:text-slate-200 text-xl leading-none">&times;</button>
+      </div>
+
+      <!-- STATUS BODY -->
+      <div class="p-6 space-y-4 text-xs font-mono">
+        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Account Connection:</span>
+            <span id="diagAccountStatus" class="font-bold text-amber-400">Not Connected</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Drive Sync Target:</span>
+            <span class="text-slate-300">appDataFolder/BarRecitMasterBackup_DriveSync.json</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Local Stamped Modified:</span>
+            <span id="diagLocalTimestamp" class="text-slate-300">Never</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Remote Cloud File Modified:</span>
+            <span id="diagRemoteTimestamp" class="text-slate-300">Checking...</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Decks in Sync Payload:</span>
+            <span id="diagDeckCount" class="text-emerald-400 font-bold">0 Decks</span>
+          </div>
+        </div>
+
+        <div id="diagConflictBox" class="hidden p-3.5 rounded-xl bg-amber-950/40 border border-amber-700 text-amber-200 space-y-1.5">
+          <span class="font-bold block flex items-center space-x-1.5">
+            <span>⚠️ Cloud Version Newer</span>
+          </span>
+          <p class="text-[11px] leading-relaxed text-slate-300">
+            A newer backup exists on Google Drive. Running a sync will non-destructively merge missing decks and higher mastery scores into this device.
+          </p>
+        </div>
+      </div>
+
+      <!-- FOOTER ACTIONS -->
+      <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+        <button type="button" onclick="closeDriveHealthModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-mono transition">
+          Close
+        </button>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="forceDriveHealthCheck()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-700/60 rounded-lg text-xs font-mono font-bold transition">
+            Scan Drive File
+          </button>
+          <button type="button" onclick="syncWithGoogleDrive(true)" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow">
+            Sync & Auto-Merge Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
