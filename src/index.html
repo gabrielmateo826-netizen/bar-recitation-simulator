@@ -61,7 +61,7 @@
           <span>·</span>
           <span>Preset: <span id="activePresetHeaderLabel" class="font-mono text-emerald-400 font-semibold">Full Bar Sim (10/10)</span></span>
           <span>·</span>
-          <span id="headerSyncStatusBadge" onclick="openDriveHealthModal()" class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-400 cursor-pointer hover:border-slate-600 transition" title="Click to inspect Google Drive AppData Sync Diagnostics">
+          <span id="headerSyncStatusBadge" onclick="openDriveHealthModal()" class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-400 cursor-pointer hover:border-slate-600 transition" title="Click to configure Scope & Cross-Device 6-Digit PIN Sync">
             💾 Local Mode
           </span>
         </p>
@@ -1000,73 +1000,62 @@
       </div>
 
       <div class="p-6 overflow-y-auto space-y-5 flex-1 text-sm">
-        <!-- GOOGLE DRIVE APPDATA SYNC & AUTHENTICATION PORTAL -->
-        <div id="googleAuthSection" class="p-4 rounded-xl border border-sky-800/60 bg-sky-950/20 backdrop-blur space-y-3">
-          
-          <!-- STATE A: UNAUTHENTICATED / GUEST PROMPT -->
-          <div id="authPromptContainer" class="space-y-3">
-            <div class="flex items-start justify-between gap-3">
-              <div class="space-y-1">
-                <span class="text-xs font-mono font-bold uppercase text-sky-400 flex items-center space-x-1.5">
-                  <svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/></svg>
-                  <span>Google Drive Cross-Device Sync (Zero Server · Private)</span>
-                </span>
-                <p class="text-[11px] text-slate-300 leading-relaxed">
-                  Sign in with your personal Gmail to synchronize your decks, weak-spot mastery, and unfinished card sessions automatically across your laptop and tablet without manual exports.
-                </p>
+        <!-- CROSS-DEVICE SNAPSHOT PAIRING & SYNC PORTAL -->
+        <div id="pairSyncSection" class="p-4 rounded-xl border border-sky-800/60 bg-sky-950/20 backdrop-blur space-y-3.5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="space-y-1">
+              <span class="text-xs font-mono font-bold uppercase text-sky-400 flex items-center space-x-1.5">
+                <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                <span>Cross-Device Instant Sync (6-Digit Device Pairing)</span>
+              </span>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                Wirelessly transfer all your decks, syllabus modules, and mastery progress between your PC, Android tablet, and phone without accounts, passwords, or Google OAuth blocks.
+              </p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-950 text-sky-300 border border-sky-800 shrink-0">
+              ZERO-LOGIN SYNC
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            <!-- DEVICE A: PUSH / GENERATE CODE -->
+            <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <b class="text-xs font-mono text-amber-300 uppercase">Send to Another Device:</b>
+                <span class="text-[10px] text-slate-500 font-mono">Step 1</span>
               </div>
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-950 text-sky-300 border border-sky-800 shrink-0">
-                PATH 2 SYNC
-              </span>
-            </div>
-
-            <div class="flex items-center space-x-2.5 pt-1">
-              <button type="button" onclick="initiateGoogleDriveLogin()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-lg text-xs font-sans flex items-center space-x-2 shadow transition cursor-pointer">
-                <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-                <span>Sign in with Google</span>
-              </button>
-              <button type="button" onclick="continueAsGuest()" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg text-xs font-mono transition cursor-pointer">
-                Continue as Guest
-              </button>
-            </div>
-          </div>
-
-          <!-- GUEST WARNING BOX (SHOWN WHEN GUEST IS SELECTED) -->
-          <div id="guestWarningBox" class="hidden p-3 rounded-lg border border-amber-700/70 bg-amber-950/30 text-xs space-y-1">
-            <div class="flex items-center justify-between">
-              <span class="flex items-center space-x-1.5 font-bold text-amber-300 font-mono">
-                <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                <span>GUEST MODE ACTIVE (LOCAL STORAGE ONLY)</span>
-              </span>
-              <button type="button" onclick="initiateGoogleDriveLogin()" class="text-[11px] font-mono text-sky-400 hover:underline">
-                Sign In to Enable Cloud Sync ↗
-              </button>
-            </div>
-            <p class="text-slate-300 text-[11px] leading-relaxed">
-              ⚠️ Decks, cards, and mastery progress are saved <b>solely in this device's browser memory</b>. Clearing cache or switching browsers/devices will erase your cards.
-            </p>
-          </div>
-
-          <!-- STATE B: AUTHENTICATED USER BAR -->
-          <div id="authenticatedUserContainer" class="hidden flex items-center justify-between flex-wrap gap-2 pt-1">
-            <div class="flex items-center space-x-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-              <div>
-                <span id="authEmailLabel" class="text-xs font-mono font-bold text-emerald-300 block">account@gmail.com</span>
-                <span id="authDriveSyncTime" class="text-[10px] font-mono text-slate-400">Google Drive AppData Connected</span>
+              <p class="text-[11px] text-slate-400 leading-relaxed">
+                Click below to package your workspace and generate a temporary 6-digit sync code:
+              </p>
+              <div class="flex items-center space-x-2 pt-1">
+                <button type="button" id="generateSyncPinBtn" onclick="generateDeviceSyncPIN()" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow flex items-center space-x-1.5">
+                  <span id="pinSpinner" class="hidden animate-spin h-3.5 w-3.5 border-2 border-slate-950 border-t-transparent rounded-full"></span>
+                  <span id="pinBtnText">Generate 6-Digit PIN</span>
+                </button>
+                <div id="generatedPinDisplay" class="hidden px-3 py-1.5 bg-slate-900 border border-amber-600/80 rounded-lg text-center">
+                  <span class="text-[10px] font-mono text-slate-400 block">YOUR PAIR PIN:</span>
+                  <span id="pinValue" class="text-base font-mono font-bold text-amber-300 tracking-wider">--- ---</span>
+                </div>
               </div>
             </div>
-            <div class="flex items-center space-x-2">
-              <button type="button" onclick="syncWithGoogleDrive(true)" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow flex items-center space-x-1">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                <span>Sync Now</span>
-              </button>
-              <button type="button" onclick="signOutGoogleDrive()" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/80 rounded-lg text-xs font-mono transition">
-                Sign Out
-              </button>
+
+            <!-- DEVICE B: PULL / ENTER CODE -->
+            <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <b class="text-xs font-mono text-emerald-400 uppercase">Receive on This Device:</b>
+                <span class="text-[10px] text-slate-500 font-mono">Step 2</span>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed">
+                Enter the 6-digit PIN generated on your other device to pull and auto-merge:
+              </p>
+              <div class="flex items-center space-x-2 pt-1">
+                <input type="text" id="inputPairPin" placeholder="e.g. 519204" maxlength="7" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-center font-mono text-sm text-emerald-300 tracking-widest uppercase focus:outline-none focus:border-emerald-500 w-32" />
+                <button type="button" id="pullSyncPinBtn" onclick="pullDeviceSyncPIN()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow">
+                  Pull & Merge
+                </button>
+              </div>
             </div>
           </div>
-
         </div>
 
         <!-- LIVE GATEKEEPER & OPERATING PIPELINE BANNER -->
@@ -1476,204 +1465,10 @@
 
 <script>
     // ---------------------------------------------------------------------------
-    // GOOGLE DRIVE APPDATA SYNC & AUTHENTICATION SUBSYSTEM (PATH 2)
+    // CROSS-DEVICE SNAPSHOT PAIRING & SYNC SUBSYSTEM (6-DIGIT PIN RELAY)
     // ---------------------------------------------------------------------------
-    const GOOGLE_CLIENT_ID = '903073071581-i47u689diq5t8u4s1v4ac4qrgievgcif.apps.googleusercontent.com';
-    const DRIVE_SYNC_FILENAME = 'BarRecitMasterBackup_DriveSync.json';
-    const DRIVE_APPDATA_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
-
-    let gDriveTokenClient = null;
-    let gDriveAccessToken = null;
-    let gDriveUserEmail = null;
-    let isGuestSession = false;
-
-    function initGoogleAuthClient() {
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
-        return false;
-      }
-      if (!gDriveTokenClient) {
-        gDriveTokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: DRIVE_APPDATA_SCOPE,
-          callback: async (resp) => {
-            if (resp.error) {
-              console.error("Google Auth error:", resp);
-              alert("Google Sign-In failed: " + resp.error);
-              return;
-            }
-            gDriveAccessToken = resp.access_token;
-            sessionStorage.setItem('bar_drive_access_token', gDriveAccessToken);
-            await fetchGoogleUserInfo();
-            updateAuthUIState(true);
-            if (typeof syncWithGoogleDrive === 'function') {
-              await syncWithGoogleDrive(false);
-            }
-          }
-        });
-      }
-      return true;
-    }
-
-    async function fetchGoogleUserInfo() {
-      if (!gDriveAccessToken) return;
-      try {
-        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${gDriveAccessToken}` }
-        });
-        if (res.ok) {
-          const user = await res.json();
-          gDriveUserEmail = user.email || 'Connected User';
-          sessionStorage.setItem('bar_drive_user_email', gDriveUserEmail);
-        }
-      } catch (e) {
-        console.warn("Could not fetch user profile info:", e);
-        gDriveUserEmail = 'Google Account Connected';
-      }
-    }
-
-    function initiateGoogleDriveLogin() {
-      if (!initGoogleAuthClient()) {
-        alert("Google Identity Services script is still loading. Please try again in a few seconds.");
-        return;
-      }
-      isGuestSession = false;
-      gDriveTokenClient.requestAccessToken({ prompt: 'consent' });
-    }
-
-    function continueAsGuest() {
-      isGuestSession = true;
-      document.getElementById('authPromptContainer')?.classList.add('hidden');
-      document.getElementById('guestWarningBox')?.classList.remove('hidden');
-      document.getElementById('authenticatedUserContainer')?.classList.add('hidden');
-      const badge = document.getElementById('headerSyncStatusBadge');
-      if (badge) {
-        badge.innerText = "💾 Guest (Local)";
-        badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-800 text-amber-300";
-      }
-    }
-
-    function signOutGoogleDrive() {
-      if (gDriveAccessToken && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
-        try {
-          google.accounts.oauth2.revoke(gDriveAccessToken, () => {});
-        } catch (_) {}
-      }
-      gDriveAccessToken = null;
-      gDriveUserEmail = null;
-      isGuestSession = false;
-      sessionStorage.removeItem('bar_drive_access_token');
-      sessionStorage.removeItem('bar_drive_user_email');
-      updateAuthUIState(false);
-      alert("Signed out from Google Drive Sync.");
-    }
-
-    function updateAuthUIState(isAuthenticated) {
-      const promptBox = document.getElementById('authPromptContainer');
-      const warningBox = document.getElementById('guestWarningBox');
-      const userBox = document.getElementById('authenticatedUserContainer');
-      const emailLabel = document.getElementById('authEmailLabel');
-      const syncTimeLabel = document.getElementById('authDriveSyncTime');
-      const badge = document.getElementById('headerSyncStatusBadge');
-
-      if (isAuthenticated) {
-        promptBox?.classList.add('hidden');
-        warningBox?.classList.add('hidden');
-        userBox?.classList.remove('hidden');
-        if (emailLabel) emailLabel.innerText = gDriveUserEmail || 'Google Drive Connected';
-        if (syncTimeLabel) syncTimeLabel.innerText = "Connected to appDataFolder";
-        if (badge) {
-          badge.innerText = "☁️ Drive Connected";
-          badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-950/70 border border-emerald-800 text-emerald-300";
-        }
-      } else {
-        promptBox?.classList.remove('hidden');
-        warningBox?.classList.add('hidden');
-        userBox?.classList.add('hidden');
-        if (badge) {
-          badge.innerText = "💾 Local Mode";
-          badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400";
-        }
-      }
-    }
-    // ---------------------------------------------------------------------------
-    // GOOGLE DRIVE REST API HELPERS: APPDATA FOLDER READ / WRITE / MERGE
-    // ---------------------------------------------------------------------------
-    async function findDriveSyncFileId() {
-      if (!gDriveAccessToken) return null;
-      try {
-        const query = encodeURIComponent(`name = '${DRIVE_SYNC_FILENAME}' and 'appDataFolder' in parents and trashed = false`);
-        const url = `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${query}&fields=files(id,name,modifiedTime)`;
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${gDriveAccessToken}` }
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return (data.files && data.files.length > 0) ? data.files[0].id : null;
-      } catch (e) {
-        console.warn("Error finding Drive sync file:", e);
-        return null;
-      }
-    }
-
-    async function downloadDriveSyncPayload(fileId) {
-      if (!gDriveAccessToken || !fileId) return null;
-      try {
-        const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${gDriveAccessToken}` }
-        });
-        if (!res.ok) return null;
-        return await res.json();
-      } catch (e) {
-        console.warn("Error downloading Drive sync file:", e);
-        return null;
-      }
-    }
-
-    async function uploadDriveSyncPayload(payloadJsonString, existingFileId = null) {
-      if (!gDriveAccessToken) return false;
-      try {
-        const metadata = {
-          name: DRIVE_SYNC_FILENAME,
-          parents: ['appDataFolder']
-        };
-
-        const boundary = '-------314159265358979323846';
-        const delimiter = "\r\n--" + boundary + "\r\n";
-        const close_delim = "\r\n--" + boundary + "--";
-
-        const multipartRequestBody =
-          delimiter +
-          'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-          JSON.stringify(metadata) +
-          delimiter +
-          'Content-Type: application/json\r\n\r\n' +
-          payloadJsonString +
-          close_delim;
-
-        let uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-        let method = 'POST';
-
-        if (existingFileId) {
-          uploadUrl = `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=multipart`;
-          method = 'PATCH';
-        }
-
-        const res = await fetch(uploadUrl, {
-          method: method,
-          headers: {
-            Authorization: `Bearer ${gDriveAccessToken}`,
-            'Content-Type': `multipart/related; boundary=${boundary}`
-          },
-          body: multipartRequestBody
-        });
-
-        return res.ok;
-      } catch (e) {
-        console.error("Error uploading to Google Drive appDataFolder:", e);
-        return false;
-      }
-    }
+    // Public zero-signup ephemeral relay endpoint (15-min auto-purge)
+    const PIN_RELAY_BASE = 'https://kvdb.io/4yK4gXyqKjS4yBvZ9nKzX4/';
 
     async function generateCompleteMasterPayload() {
       const meta = await dbGetAllRaw('metadata');
@@ -1683,10 +1478,10 @@
       const decks = await dbGetAllRaw('decks');
 
       return {
-        format: "ph_bar_recit_drive_sync_v1",
+        format: "ph_bar_recit_pin_sync_v1",
         syncTimestamp: Date.now(),
         syncDate: new Date().toISOString(),
-        userEmail: gDriveUserEmail,
+        subject: currentSubjectName,
         metadata: meta,
         sources: sources,
         digests: digests,
@@ -1695,162 +1490,148 @@
       };
     }
 
-    function openDriveHealthModal() {
-      document.getElementById('driveSyncHealthModal')?.classList.remove('hidden');
-      forceDriveHealthCheck();
-    }
+    async function generateDeviceSyncPIN() {
+      const btnText = document.getElementById('pinBtnText');
+      const spinner = document.getElementById('pinSpinner');
+      const pinBox = document.getElementById('generatedPinDisplay');
+      const pinVal = document.getElementById('pinValue');
 
-    function closeDriveHealthModal() {
-      document.getElementById('driveSyncHealthModal')?.classList.add('hidden');
-    }
+      if (btnText) btnText.innerText = "Packaging Decks...";
+      if (spinner) spinner.classList.remove('hidden');
 
-    async function forceDriveHealthCheck() {
-      const acctLabel = document.getElementById('diagAccountStatus');
-      const localTimeLabel = document.getElementById('diagLocalTimestamp');
-      const remoteTimeLabel = document.getElementById('diagRemoteTimestamp');
-      const deckCountLabel = document.getElementById('diagDeckCount');
-      const conflictBox = document.getElementById('diagConflictBox');
-
-      if (!gDriveAccessToken) {
-        if (acctLabel) acctLabel.innerHTML = `<span class="text-amber-400 font-bold">Unauthenticated (Guest Mode)</span>`;
-        if (remoteTimeLabel) remoteTimeLabel.innerText = "Sign in to check remote file";
-        if (conflictBox) conflictBox.classList.add('hidden');
-        return;
-      }
-
-      if (acctLabel) acctLabel.innerHTML = `<span class="text-emerald-400 font-bold">✓ Connected (${escapeHtml(gDriveUserEmail || 'User')})</span>`;
-
-      // Check local DB timestamp & deck count
-      const localMetaRecord = await dbGet('metadata', metaKey('lastModifiedTimestamp'));
-      const localTime = localMetaRecord ? localMetaRecord.val : 0;
-      if (localTimeLabel) localTimeLabel.innerText = localTime ? new Date(localTime).toLocaleString() : 'No local edits recorded';
-
-      const decks = await dbGetAll('decks');
-      if (deckCountLabel) deckCountLabel.innerText = `${decks.length} Decks (${decks.reduce((a, d) => a + (d.cards ? d.cards.length : 0), 0)} Total Cards)`;
-
-      // Scan remote Drive AppData folder
       try {
-        if (remoteTimeLabel) remoteTimeLabel.innerText = "Querying Google Drive API...";
-        const fileId = await findDriveSyncFileId();
-        if (!fileId) {
-          if (remoteTimeLabel) remoteTimeLabel.innerText = "No remote file yet (Will create on next sync)";
-          if (conflictBox) conflictBox.classList.add('hidden');
-          return;
-        }
+        // Generate random 6-digit numeric PIN
+        const pin = Math.floor(100000 + Math.random() * 900000).toString();
+        const formattedPin = `${pin.substring(0, 3)}-${pin.substring(3)}`;
 
-        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=modifiedTime`, {
-          headers: { Authorization: `Bearer ${gDriveAccessToken}` }
+        // Package all current decks, sources, and mastery records
+        const payload = await generateCompleteMasterPayload();
+        const payloadString = JSON.stringify(payload);
+
+        // Deposit payload into ephemeral relay (expires in 900 seconds / 15 minutes)
+        const res = await fetch(`${PIN_RELAY_BASE}sync_${pin}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payloadString
         });
 
-        if (res.ok) {
-          const fileMeta = await res.json();
-          const remoteDate = new Date(fileMeta.modifiedTime);
-          if (remoteTimeLabel) remoteTimeLabel.innerText = `${remoteDate.toLocaleString()} (File ID: ${fileId.substring(0, 8)}...)`;
+        if (!res.ok) throw new Error("Could not register sync code with relay.");
 
-          if (remoteDate.getTime() > (localTime + 3000)) {
-            if (conflictBox) conflictBox.classList.remove('hidden');
-          } else {
-            if (conflictBox) conflictBox.classList.add('hidden');
-          }
+        if (pinVal) pinVal.innerText = formattedPin;
+        if (pinBox) pinBox.classList.remove('hidden');
+        if (btnText) btnText.innerText = "New PIN";
+
+        const badge = document.getElementById('headerSyncStatusBadge');
+        if (badge) {
+          badge.innerText = `PIN: ${formattedPin}`;
+          badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-800 text-amber-300";
         }
-      } catch (e) {
-        if (remoteTimeLabel) remoteTimeLabel.innerText = "Scan failed: " + e.message;
+
+        alert(`Sync PIN Ready: ${formattedPin}\n\nOpen the simulator on your phone or tablet, enter this 6-digit code under Setup, and tap 'Pull & Merge'. Valid for 15 minutes.`);
+      } catch (err) {
+        console.error("PIN Generation Error:", err);
+        alert("Failed to generate sync PIN: " + err.message);
+        if (btnText) btnText.innerText = "Generate 6-Digit PIN";
+      } finally {
+        if (spinner) spinner.classList.add('hidden');
       }
     }
 
-    async function syncWithGoogleDrive(interactive = false) {
-      if (!gDriveAccessToken) {
-        if (interactive) initiateGoogleDriveLogin();
+    async function pullDeviceSyncPIN() {
+      const input = document.getElementById('inputPairPin');
+      const rawPin = (input?.value || '').replace(/[^0-9]/g, '');
+
+      if (rawPin.length !== 6) {
+        alert("Please enter a valid 6-digit PIN (e.g. 519204).");
         return;
       }
 
-      const syncTimeLabel = document.getElementById('authDriveSyncTime');
-      const headerBadge = document.getElementById('headerSyncStatusBadge');
-      if (syncTimeLabel) syncTimeLabel.innerText = "Syncing with Drive...";
-      if (headerBadge) headerBadge.innerText = "☁️ Syncing...";
+      const btn = document.getElementById('pullSyncPinBtn');
+      const originalText = btn.innerText;
+      btn.innerText = "Downloading...";
+      btn.disabled = true;
 
       try {
-        const fileId = await findDriveSyncFileId();
-        let remotePayload = fileId ? await downloadDriveSyncPayload(fileId) : null;
-        let localTimestamp = 0;
-
-        const localMetaRecord = await dbGet('metadata', metaKey('lastModifiedTimestamp'));
-        if (localMetaRecord && localMetaRecord.val) {
-          localTimestamp = localMetaRecord.val;
+        const res = await fetch(`${PIN_RELAY_BASE}sync_${rawPin}`);
+        if (!res.ok) {
+          throw new Error("Invalid or expired PIN. Please generate a new code on your primary device.");
         }
 
-        if (remotePayload && remotePayload.decks) {
-          const remoteTimestamp = remotePayload.syncTimestamp || 0;
+        const remotePayload = await res.json();
+        if (!remotePayload || !remotePayload.decks) {
+          throw new Error("Invalid sync payload received.");
+        }
 
-          // Merge Decks non-destructively
-          const localDecks = await dbGetAllRaw('decks');
-          const localDeckMap = new Map(localDecks.map(d => [d.id, d]));
+        // Non-destructively merge Decks
+        const localDecks = await dbGetAllRaw('decks');
+        const localDeckMap = new Map(localDecks.map(d => [d.id, d]));
 
-          for (const remDeck of remotePayload.decks || []) {
-            const existing = localDeckMap.get(remDeck.id);
-            if (!existing) {
+        for (const remDeck of remotePayload.decks || []) {
+          const existing = localDeckMap.get(remDeck.id);
+          if (!existing) {
+            await dbSave('decks', remDeck);
+          } else {
+            const remTime = new Date(remDeck.createdAt || 0).getTime();
+            const locTime = new Date(existing.createdAt || 0).getTime();
+            if (remTime >= locTime || (remDeck.cards && remDeck.cards.length > (existing.cards ? existing.cards.length : 0))) {
               await dbSave('decks', remDeck);
-            } else {
-              const remTime = new Date(remDeck.createdAt || 0).getTime();
-              const locTime = new Date(existing.createdAt || 0).getTime();
-              if (remTime > locTime || (remDeck.cards && remDeck.cards.length > (existing.cards ? existing.cards.length : 0))) {
-                await dbSave('decks', remDeck);
-              }
             }
           }
+        }
 
-          // Merge Mastery non-destructively
-          const localMastery = await dbGetAllRaw('mastery');
-          const localMasteryMap = new Map(localMastery.map(m => [m.id, m]));
+        // Non-destructively merge Mastery records
+        const localMastery = await dbGetAllRaw('mastery');
+        const localMasteryMap = new Map(localMastery.map(m => [m.id, m]));
 
-          for (const remM of remotePayload.mastery || []) {
-            const existing = localMasteryMap.get(remM.id);
-            if (!existing) {
+        for (const remM of remotePayload.mastery || []) {
+          const existing = localMasteryMap.get(remM.id);
+          if (!existing) {
+            await dbSave('mastery', remM);
+          } else {
+            const remTested = new Date(remM.lastTested || 0).getTime();
+            const locTested = new Date(existing.lastTested || 0).getTime();
+            if (remTested >= locTested) {
               await dbSave('mastery', remM);
-            } else {
-              const remTested = new Date(remM.lastTested || 0).getTime();
-              const locTested = new Date(existing.lastTested || 0).getTime();
-              if (remTested >= locTested) {
-                await dbSave('mastery', remM);
-              }
-            }
-          }
-
-          // Merge Syllabi & Metadata
-          for (const remMeta of remotePayload.metadata || []) {
-            if (!remMeta.key.includes('lastModifiedTimestamp')) {
-              await dbSave('metadata', remMeta);
             }
           }
         }
 
-        // Upload combined master payload
-        const updatedMaster = await generateCompleteMasterPayload();
-        await uploadDriveSyncPayload(JSON.stringify(updatedMaster, null, 2), fileId);
-
-        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        if (syncTimeLabel) syncTimeLabel.innerText = `Last synced at ${timeStr}`;
-        if (headerBadge) {
-          headerBadge.innerText = "☁️ Cloud Synced";
-          headerBadge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-950/70 border border-emerald-800 text-emerald-300";
+        // Merge Syllabi, metadata & sources
+        for (const remMeta of remotePayload.metadata || []) {
+          await dbSave('metadata', remMeta);
+        }
+        for (const remSource of remotePayload.sources || []) {
+          await dbSave('sources', remSource);
+        }
+        for (const remDigest of remotePayload.digests || []) {
+          await dbSave('digests', remDigest);
         }
 
+        await stampSubjectModifiedTimestamp();
         await refreshMasteryStatsUI();
         await renderDeckListUI();
         evaluateGatekeeperState();
 
-        if (interactive) {
-          alert(`Google Drive AppData Sync complete!\nYour decks, cards, and mastery are now synchronized with your Google account.`);
+        const badge = document.getElementById('headerSyncStatusBadge');
+        if (badge) {
+          badge.innerText = "✓ Synced via PIN";
+          badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-950/70 border border-emerald-800 text-emerald-300";
         }
+
+        alert(`✅ Synced Successfully!\n\nImported ${remotePayload.decks.length} deck(s) and ${remotePayload.mastery.length} mastery records from device.`);
+        if (input) input.value = '';
       } catch (err) {
-        console.error("Sync error:", err);
-        if (syncTimeLabel) syncTimeLabel.innerText = "Sync failed";
-        if (headerBadge) {
-          headerBadge.innerText = "⚠️ Sync Error";
-          headerBadge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-red-950/70 border border-red-800 text-red-300";
-        }
-        if (interactive) alert("Sync failed: " + err.message);
+        console.error("PIN Pull Error:", err);
+        alert("Sync Failed: " + err.message);
+      } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
       }
+    }
+
+    function openDriveHealthModal() {
+      // Repurposed to open setup modal directly to Sync tab
+      toggleModal('setupModal');
     }
     let currentSubjectName = localStorage.getItem('bar_active_subject') || 'Evidence';
     const DB_NAME = 'BarRecitUniversalMasterDB_v14_1';
@@ -2459,50 +2240,6 @@
     // ---------------------------------------------------------------------------
     // STATUTORY & ALAC HEALING + UNIFIED FILE EXPORT UTILITIES
     // ---------------------------------------------------------------------------
-    function healTruncatedStatutoryText(text, topic) {
-      if (!text || text.trim().endsWith(':') || text.trim().endsWith('-') || text.length < 40) {
-        const canonical = retrieveVerbatimProvision(topic);
-        if (canonical && canonical.length > (text ? text.length : 0)) return canonical;
-      }
-      return text || '';
-    }
-
-    function healTruncatedAlacBasis(basis, fallback) {
-      if (!basis || basis.length < 30) {
-        return fallback || basis || '';
-      }
-      return basis;
-    }
-
-    async function exportWithSaveDialog(content, defaultFilename, mimeType = 'text/plain', fileDescription = 'File', extension = '') {
-      if (window.__TAURI__?.dialog && window.__TAURI__?.fs) {
-        try {
-          const filePath = await window.__TAURI__.dialog.save({
-            defaultPath: defaultFilename,
-            filters: extension ? [{ name: fileDescription, extensions: [extension.replace(/^\./, '')] }] : []
-          });
-          if (filePath) {
-            await window.__TAURI__.fs.writeTextFile(filePath, content);
-            return true;
-          }
-          return false;
-        } catch (err) {
-          console.warn("Tauri native save failed, using browser download fallback:", err);
-        }
-      }
-      // Standard browser download fallback
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = defaultFilename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      return true;
-    }
-
     // ---------------------------------------------------------------------------
     // STATUTORY & ALAC HEALING + UNIFIED FILE EXPORT UTILITIES
     // ---------------------------------------------------------------------------
@@ -2537,7 +2274,6 @@
           console.warn("Tauri native save failed, using browser download fallback:", err);
         }
       }
-      // Standard browser download fallback
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2981,20 +2717,6 @@ if (syncScanInterval) clearInterval(syncScanInterval);
       syncScanInterval = setInterval(() => {
         checkForModernDiskSync(currentSubjectName);
       }, 60000);
-
-// Background Google Drive synchronization pulse (every 4 minutes while app remains open)
-      setInterval(() => {
-        if (gDriveAccessToken && !state.isSessionActive && typeof syncWithGoogleDrive === 'function') {
-          syncWithGoogleDrive(false).catch(e => console.warn("Periodic Drive pulse:", e));
-        }
-      }, 240000);
-
-      // Background Google Drive synchronization pulse (every 4 minutes while app remains open)
-      setInterval(() => {
-        if (gDriveAccessToken && !state.isSessionActive && typeof syncWithGoogleDrive === 'function') {
-          syncWithGoogleDrive(false).catch(e => console.warn("Periodic Drive pulse:", e));
-        }
-      }, 240000);
 
       // Startup modal sequence: Video tutorial takes precedence on first launch
 const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
@@ -7534,10 +7256,7 @@ async function getActiveCards() {
       });
       await autoSaveSubjectToTauriDisk();
 
-      // Background Google Drive AppData sync if authenticated
-      if (gDriveAccessToken && typeof syncWithGoogleDrive === 'function') {
-        syncWithGoogleDrive(false).catch(e => console.warn("Background Drive sync:", e));
-      }
+      // Workspace state stamped locally; PIN-based snapshot relay active
 
       return now;
     }
@@ -9877,141 +9596,5 @@ async function saveCustomCard(addAnother = false) {
       return cleanBasis;
     }
   </script>
-<!-- ========================================================================= -->
-  <!-- GOOGLE DRIVE SYNC HEALTH & DIAGNOSTIC MODAL                               -->
-  <!-- ========================================================================= -->
-  <div id="driveSyncHealthModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[80] hidden flex items-center justify-center p-3 md:p-6">
-    <div class="bg-slate-900 border border-sky-600/70 rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden">
-      <!-- HEADER -->
-      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
-        <div class="flex items-center space-x-3">
-          <span class="w-8 h-8 rounded bg-sky-600 flex items-center justify-center font-mono font-bold text-slate-950 text-base shadow">☁️</span>
-          <div>
-            <h2 class="font-serif font-bold text-slate-100 text-base">Google Drive AppData Sync Diagnostics</h2>
-            <p class="text-[11px] text-slate-400 font-mono">Zero-Server · Private Cross-Device State</p>
-          </div>
-        </div>
-        <button type="button" onclick="closeDriveHealthModal()" class="text-slate-400 hover:text-slate-200 text-xl leading-none">&times;</button>
-      </div>
-
-      <!-- STATUS BODY -->
-      <div class="p-6 space-y-4 text-xs font-mono">
-        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Account Connection:</span>
-            <span id="diagAccountStatus" class="font-bold text-amber-400">Not Connected</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Drive Sync Target:</span>
-            <span class="text-slate-300">appDataFolder/BarRecitMasterBackup_DriveSync.json</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Local Stamped Modified:</span>
-            <span id="diagLocalTimestamp" class="text-slate-300">Never</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Remote Cloud File Modified:</span>
-            <span id="diagRemoteTimestamp" class="text-slate-300">Checking...</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Decks in Sync Payload:</span>
-            <span id="diagDeckCount" class="text-emerald-400 font-bold">0 Decks</span>
-          </div>
-        </div>
-
-        <div id="diagConflictBox" class="hidden p-3.5 rounded-xl bg-amber-950/40 border border-amber-700 text-amber-200 space-y-1.5">
-          <span class="font-bold block flex items-center space-x-1.5">
-            <span>⚠️ Cloud Version Newer</span>
-          </span>
-          <p class="text-[11px] leading-relaxed text-slate-300">
-            A newer backup exists on Google Drive. Running a sync will non-destructively merge missing decks and higher mastery scores into this device.
-          </p>
-        </div>
-      </div>
-
-      <!-- FOOTER ACTIONS -->
-      <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
-        <button type="button" onclick="closeDriveHealthModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-mono transition">
-          Close
-        </button>
-        <div class="flex items-center space-x-2">
-          <button type="button" onclick="forceDriveHealthCheck()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-700/60 rounded-lg text-xs font-mono font-bold transition">
-            Scan Drive File
-          </button>
-          <button type="button" onclick="syncWithGoogleDrive(true)" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow">
-            Sync & Auto-Merge Now
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-<!-- ========================================================================= -->
-  <!-- GOOGLE DRIVE SYNC HEALTH & DIAGNOSTIC MODAL                               -->
-  <!-- ========================================================================= -->
-  <div id="driveSyncHealthModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[80] hidden flex items-center justify-center p-3 md:p-6">
-    <div class="bg-slate-900 border border-sky-600/70 rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden">
-      <!-- HEADER -->
-      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
-        <div class="flex items-center space-x-3">
-          <span class="w-8 h-8 rounded bg-sky-600 flex items-center justify-center font-mono font-bold text-slate-950 text-base shadow">☁️</span>
-          <div>
-            <h2 class="font-serif font-bold text-slate-100 text-base">Google Drive AppData Sync Diagnostics</h2>
-            <p class="text-[11px] text-slate-400 font-mono">Zero-Server · Private Cross-Device State</p>
-          </div>
-        </div>
-        <button type="button" onclick="closeDriveHealthModal()" class="text-slate-400 hover:text-slate-200 text-xl leading-none">&times;</button>
-      </div>
-
-      <!-- STATUS BODY -->
-      <div class="p-6 space-y-4 text-xs font-mono">
-        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Account Connection:</span>
-            <span id="diagAccountStatus" class="font-bold text-amber-400">Not Connected</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Drive Sync Target:</span>
-            <span class="text-slate-300">appDataFolder/BarRecitMasterBackup_DriveSync.json</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Local Stamped Modified:</span>
-            <span id="diagLocalTimestamp" class="text-slate-300">Never</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Remote Cloud File Modified:</span>
-            <span id="diagRemoteTimestamp" class="text-slate-300">Checking...</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-slate-400">Decks in Sync Payload:</span>
-            <span id="diagDeckCount" class="text-emerald-400 font-bold">0 Decks</span>
-          </div>
-        </div>
-
-        <div id="diagConflictBox" class="hidden p-3.5 rounded-xl bg-amber-950/40 border border-amber-700 text-amber-200 space-y-1.5">
-          <span class="font-bold block flex items-center space-x-1.5">
-            <span>⚠️ Cloud Version Newer</span>
-          </span>
-          <p class="text-[11px] leading-relaxed text-slate-300">
-            A newer backup exists on Google Drive. Running a sync will non-destructively merge missing decks and higher mastery scores into this device.
-          </p>
-        </div>
-      </div>
-
-      <!-- FOOTER ACTIONS -->
-      <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
-        <button type="button" onclick="closeDriveHealthModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-mono transition">
-          Close
-        </button>
-        <div class="flex items-center space-x-2">
-          <button type="button" onclick="forceDriveHealthCheck()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-700/60 rounded-lg text-xs font-mono font-bold transition">
-            Scan Drive File
-          </button>
-          <button type="button" onclick="syncWithGoogleDrive(true)" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow">
-            Sync & Auto-Merge Now
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
