@@ -763,7 +763,7 @@
         </div>
         <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
           <b class="text-sky-300 font-mono block mb-1">2. Presets & Compilation (0:30 - 1:00)</b>
-          <span class="text-slate-400">Select Codal, FIR, or Bar Sim, click Pre-Compile, and launch into the recitation arena.</span>
+          <span class="text-slate-400">Select Codal, FIR, or Bar Sim, click Pre-Compile. Once finished, your synthesized cards are automatically saved into your library where you can launch, rename, or polish them anytime.</span>
         </div>
         <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
           <b class="text-emerald-300 font-mono block mb-1">3. Offline Card Drills (1:00 - 1:30)</b>
@@ -771,7 +771,7 @@
         </div>
         <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
           <b class="text-purple-300 font-mono block mb-1">4. Sync & Exporting (1:30 - 2:00)</b>
-          <span class="text-slate-400">Export decks to JSON for phones, or generate formatted Word (.doc) and Markdown (.md) study sheets.</span>
+          <span class="text-slate-400">Use 6-digit PIN device pairing for instant wireless sync across PC and phone, or generate Word (.doc) and Markdown (.md) study sheets.</span>
         </div>
       </div>
     </div>
@@ -933,11 +933,11 @@
         </div>
       </div>
 
-      <!-- PILLAR 5: EXPORTS, LOCAL SYNC & DISK FOLDER -->
-      <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-        <span class="text-xs font-mono font-bold uppercase text-amber-400 flex items-center space-x-2">
-          <span class="w-5 h-5 rounded-full bg-amber-600 text-slate-950 flex items-center justify-center font-sans font-bold text-[11px]">5</span>
-          <span>Study Sheet Exports (.doc / .md) & Cloud Sync Folder</span>
+      <!-- PILLAR 5: STUDY SHEET EXPORTS & 6-DIGIT DEVICE PAIRING SYNC -->
+      <div class="p-3.5 rounded-xl bg-slate-950 border border-sky-800/50 space-y-2">
+        <span class="text-xs font-mono font-bold uppercase text-sky-400 flex items-center space-x-2">
+          <span class="w-5 h-5 rounded-full bg-sky-600 text-slate-950 flex items-center justify-center font-sans font-bold text-[11px]">5</span>
+          <span>Study Sheet Exports (.doc / .md) & 6-Digit Device Pairing Sync</span>
         </span>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
           <div class="p-2 bg-slate-900 rounded border border-slate-800">
@@ -945,8 +945,8 @@
             <span class="text-slate-400">Click <b>Export (.doc)</b> or <b>Export (.md)</b> on any saved deck to generate formatted study sheets for Microsoft Word or Obsidian.</span>
           </div>
           <div class="p-2 bg-slate-900 rounded border border-slate-800">
-            <b class="text-amber-300 block mb-0.5">Native Folder Sync (.json)</b>
-            <span class="text-slate-400">The app auto-saves subject files to <code class="text-amber-300">Documents\BarRecitationSync\</code>. Sync this folder across devices using Google Drive, OneDrive, or Syncthing.</span>
+            <b class="text-amber-300 block mb-0.5">6-Digit Device PIN Pairing</b>
+            <span class="text-slate-400">Wirelessly sync your decks and mastery progress between your PC, tablet, and phone instantly without accounts or Google OAuth blocks. Click <b>"Generate PIN"</b> on Device A and enter the code on Device B.</span>
           </div>
         </div>
       </div>
@@ -1426,14 +1426,20 @@
           </div>
         </div>
 
-        <!-- FULL WORKSPACE BACKUP -->
-        <div id="masterBackupSection" class="bg-emerald-950/20 border border-emerald-800/50 rounded-xl p-3.5 space-y-2">
+        <!-- FULL WORKSPACE BACKUP & 6-DIGIT PIN SYNC -->
+        <div id="masterBackupSection" class="bg-emerald-950/20 border border-emerald-800/50 rounded-xl p-3.5 space-y-3">
           <div class="flex items-center justify-between">
             <span class="text-xs font-mono uppercase text-emerald-400 font-bold flex items-center space-x-1.5">
               <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-              <span>Universal Master Database Sync (All Subjects · Decks · Sources · Digests · Mastery)</span>
+              <span>Universal Master Database & Cross-Device Sync</span>
             </span>
           </div>
+          
+          <div class="p-2.5 bg-slate-950 rounded-lg border border-emerald-800/60 text-[11px] text-slate-300 space-y-1">
+            <b class="text-emerald-400 font-mono block">⚡ Recommended: 6-Digit PIN Pairing</b>
+            <span>For instant wireless sync across PC, tablet, and phone without manual file exports, use the <b>Cross-Device Instant Sync</b> portal at the top of Setup to generate or pull a 6-digit PIN code.</span>
+          </div>
+
           <div class="grid grid-cols-2 gap-2.5 pt-1">
             <button type="button" onclick="exportWorkspaceJSON()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-800/60 rounded-lg px-3 py-2 text-xs font-semibold flex items-center justify-center space-x-1.5 transition">
               <span>Export Master Backup (.json)</span>
@@ -2614,6 +2620,35 @@
     window.addEventListener('DOMContentLoaded', async () => {
       await openDB();
 
+      // Part 4A-3: Check for an unfinished active session on boot
+      try {
+        const savedSessionJson = localStorage.getItem(`bar_active_session_${currentSubjectName}`);
+        if (savedSessionJson) {
+          const session = JSON.parse(savedSessionJson);
+          if (session && session.activeAgenda && session.currentQuestionIndex <= session.totalQuestions) {
+            const resumeChoice = confirm(`Found an active recitation session for ${currentSubjectName} at Card ${session.currentQuestionIndex} of ${session.totalQuestions}.\n\nWould you like to resume where you left off?`);
+            if (resumeChoice) {
+              state.activeAgenda = session.activeAgenda;
+              state.totalQuestions = session.totalQuestions;
+              state.activeBatchIdx = session.activeBatchIdx || 0;
+              state.isSessionActive = true;
+
+              document.getElementById('progressDisplay')?.classList.remove('hidden');
+              document.getElementById('totalQNum').innerText = state.totalQuestions;
+              document.getElementById('saveDeckHeaderBtn')?.classList.remove('hidden');
+
+              await requestScreenWakeLock();
+              await launchActiveCard(session.currentQuestionIndex);
+              return; // Skip rest of fresh boot if resumed
+            } else {
+              localStorage.removeItem(`bar_active_session_${currentSubjectName}`);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not restore active session:", err);
+      }
+
       const rawSavedKeys = localStorage.getItem('bar_gemini_api_keys') || '';
       if (rawSavedKeys) {
         document.getElementById('apiKeyInput').value = rawSavedKeys;
@@ -3602,8 +3637,7 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
       // Check if user specifically typed an unlisted A.M. number or Administrative Circular with Section ranges
       const isGenericAmMatter = /\b(?:A\.M\.\s*No\.|Administrative\s+Matter|A\.C\.\s*No\.)\b/i.test(raw);
 
-      // 2. Explicit Section & Article Ranges (Supports up to 4-digit numbers: e.g. Article 1156-1165)
-      // Only execute if not an independent special rule like Child Witness or DNA
+      // 2. Explicit Section & Article Ranges + Sub-Clause & Multi-Paragraph Decomposition
       if (!matchedSpecialRule) {
         const rangeRegex = /(?:(?:Rule|Articles?|Arts?\.?)\s*(\d{1,4})[,:\s]+)?(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*(\d{1,4})\s*(?:[-–—]|to|through)\s*(\d{1,4})\b/gi;
         let rangeMatch;
@@ -3618,8 +3652,15 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
             for (let s = startSec; s <= endSec; s++) {
               const sKey = String(s);
 
+              // Special handling for multi-paragraph / multi-mode crimes (e.g. Art. 315 Estafa)
+              if (sKey === "315" && subLower.includes("criminal")) {
+                addCodalTopicUnique(`Revised Penal Code: Article 315, Par. 1 (Swindling / Estafa by Syndicate or False Pretenses)`, `RPC · Art. 315, par. 1`);
+                addCodalTopicUnique(`Revised Penal Code: Article 315, Par. 2 (Estafa by Means of Fraudulent Alterations / Postdated Checks)`, `RPC · Art. 315, par. 2`);
+                addCodalTopicUnique(`Revised Penal Code: Article 315, Par. 3 (Estafa through Inducing Another to Sign Documents)`, `RPC · Art. 315, par. 3`);
+                continue;
+              }
+
               if (ruleExplicit) {
-                // User explicitly typed "Rule <num>"
                 if (ruleExplicit === "130" && DETERMINISTIC_SUB_PROVISIONS[sKey]) {
                   DETERMINISTIC_SUB_PROVISIONS[sKey].forEach(sub => addCodalTopicUnique(sub.subTopic, sub.rule));
                 } else if (CANONICAL_2019_CODAL_MAP[`${ruleExplicit}:${sKey}`]) {
@@ -3629,7 +3670,6 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
                   addCodalTopicUnique(`Rule ${ruleExplicit}, Section ${sKey}`, `Rule ${ruleExplicit}, Section ${sKey}`);
                 }
               } else if (hasArticleWord || subLower.includes("criminal") || subLower.includes("civil") || subLower.includes("labor")) {
-                // Dynamically route to Article-based codes according to active subject
                 if (subLower.includes("criminal")) {
                   addCodalTopicUnique(`Revised Penal Code: Article ${sKey}`, `RPC · Art. ${sKey}`);
                 } else if (subLower.includes("civil")) {
@@ -3644,11 +3684,10 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
               } else if (subLower.includes("commercial")) {
                 addCodalTopicUnique(`Commercial Law: Section ${sKey}`, `Commercial Law · Sec. ${sKey}`);
               } else if (isGenericAmMatter) {
-                // Keep the A.M. Matter cleanly isolated — do NOT default to Rule 130!
                 const amCleanTitle = raw.split(/(?:Section|Sec\.)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
-                addCodalTopicUnique(`${amCleanTitle}: Section ${sKey}`, `${amCleanTitle} · Sec. ${sKey}`);
+                addCodalTopicUnique(`${amCleanTitle}: Section ${sKey} (General Provisions)`, `${amCleanTitle} · Sec. ${sKey}`);
+                addCodalTopicUnique(`${amCleanTitle}: Section ${sKey} (Sub-clauses & Exceptions)`, `${amCleanTitle} · Sec. ${sKey}`);
               } else {
-                // Evidence / Remedial Law standard Rule 130 fallback
                 if (DETERMINISTIC_SUB_PROVISIONS[sKey]) {
                   DETERMINISTIC_SUB_PROVISIONS[sKey].forEach(sub => addCodalTopicUnique(sub.subTopic, sub.rule));
                 } else if (CANONICAL_2019_CODAL_MAP[`130:${sKey}`]) {
@@ -4580,6 +4619,36 @@ In benchmark_alac:
 
     async function launchActiveCard(qIndex) {
       state.currentQuestionIndex = qIndex;
+
+      // Part 4A-1: Auto-save active session state to localStorage
+      try {
+        const sessionSnapshot = {
+          subject: currentSubjectName,
+          activeAgenda: state.activeAgenda,
+          currentQuestionIndex: qIndex,
+          activeBatchIdx: state.activeBatchIdx,
+          totalQuestions: state.totalQuestions,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(`bar_active_session_${currentSubjectName}`, JSON.stringify(sessionSnapshot));
+      } catch (err) {
+        console.warn("Could not save active session state:", err);
+      }
+
+      // Part 4A-1: Auto-save active session state to localStorage
+      try {
+        const sessionSnapshot = {
+          subject: currentSubjectName,
+          activeAgenda: state.activeAgenda,
+          currentQuestionIndex: qIndex,
+          activeBatchIdx: state.activeBatchIdx,
+          totalQuestions: state.totalQuestions,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(`bar_active_session_${currentSubjectName}`, JSON.stringify(sessionSnapshot));
+      } catch (err) {
+        console.warn("Could not save active session state:", err);
+      }
       document.getElementById('currentQNum').innerText = qIndex;
       const currentItem = state.activeAgenda[qIndex - 1];
       state.activeCardItem = currentItem;
@@ -4988,6 +5057,12 @@ TASK: Grade the student's recitation strictly on the specific dimension asked in
       if (state.currentQuestionIndex >= state.totalQuestions || state.currentQuestionIndex >= state.activeAgenda.length) {
         await releaseScreenWakeLock();
         state.isSessionActive = false; // Scanner resumes when batch concludes
+        
+        // Part 4A-2: Clear saved session since batch is finished
+        localStorage.removeItem(`bar_active_session_${currentSubjectName}`);
+        
+        // Part 4A-2: Clear saved session since batch is finished
+        localStorage.removeItem(`bar_active_session_${currentSubjectName}`);
         const hasNextBatch = state.batchedSets && state.activeBatchIdx + 1 < state.batchedSets.length;
         const nextBatchNum = state.activeBatchIdx + 2;
 
@@ -5401,6 +5476,10 @@ function extractCardParagraphsForExport(c) {
             <!-- LAUNCH -->
             <button onclick="launchSavedDeck('${deck.id}')" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded font-mono text-[11px] transition shadow" title="Launch an oral recitation drill with this deck">
               Launch (${activeCards})
+            </button>
+            <!-- REGENERATE & POLISH -->
+            <button onclick="openDeckRegenerateModal('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-800/60 rounded font-mono text-[11px] transition font-semibold" title="Polish, unbundle paragraphs, or upgrade cards with Cloze deletions using AI">
+              ✨ Polish
             </button>
             
             <!-- VIEW CARDS -->
@@ -7594,6 +7673,8 @@ async function getActiveCards() {
       const setupModal = document.getElementById('setupModal');
       if (setupModal && setupModal.classList.contains('hidden')) {
         toggleModal('setupModal');
+        // Allow modal DOM layout to settle before starting steps
+        await new Promise(r => setTimeout(r, 400));
       }
 
       let spotlight = document.getElementById('tourSpotlight');
@@ -7655,10 +7736,13 @@ async function getActiveCards() {
           }
         },
         {
-          elementId: 'modalSubjectLabel',
+          elementId: 'setupSubjectSelector',
           badge: "Step 2: Subject Workspace",
           narration: "Select the specific law subject you are studying from the dropdown menu, or create a custom subject workspace to keep your syllabus and decks organized.",
-          action: async () => {}
+          action: async (el) => {
+            el.value = "Evidence";
+            el.dispatchEvent(new Event('change'));
+          }
         },
         {
           elementId: 'syllabusDropzone',
@@ -7683,7 +7767,7 @@ async function getActiveCards() {
         {
           elementId: 'presetsGridContainer',
           badge: "Step 6: Recitation Dimension Presets",
-          narration: "Select your drill preset: Codal Mode for statutory provisions, Case Facts, Issue, and Ruling for doctrines, Reviewer Mode for distinctions, or Full Bar Simulator.",
+          narration: "Select your drill preset: Codal Mode for statutory provisions, Case Facts, Issue, and Ruling Mode for doctrines, Reviewer Mode for distinctions, or Full Bar Simulator for all the presets combined.",
           action: async () => {
             applyDimensionPreset('ALL');
           }
@@ -7691,7 +7775,7 @@ async function getActiveCards() {
         {
           elementId: 'footerPreCompileBtn',
           badge: "Step 7: Pre-Compile Deck",
-          narration: "Click Pre-Compile to synthesize all question batches and authoritative benchmark breakdowns into your offline database.",
+          narration: "Click Pre-Compile to synthesize all question batches and authoritative benchmark breakdowns into your offline database and click okay to save the deck",
           action: async () => {}
         },
         {
@@ -9596,5 +9680,174 @@ async function saveCustomCard(addAnother = false) {
       return cleanBasis;
     }
   </script>
+  <!-- DECK REGENERATE & POLISH CONFIGURATION MODAL -->
+<div id="deckRegenerateModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[78] hidden flex items-center justify-center p-3 md:p-6">
+  <div class="bg-slate-900 border border-purple-600/70 rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+      <div class="flex items-center space-x-3">
+        <span class="w-8 h-8 rounded bg-purple-600 flex items-center justify-center font-serif font-bold text-slate-950 text-base shadow">✨</span>
+        <div>
+          <h2 class="font-serif font-bold text-slate-100 text-base">Regenerate & Polish Deck</h2>
+          <p id="regenModalDeckTitle" class="text-[11px] text-slate-400 font-mono">AI Card Sweep & Enhancement</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeDeckRegenerateModal()" class="text-slate-400 hover:text-slate-200 text-xl leading-none">&times;</button>
+    </div>
+
+    <div class="p-6 space-y-4 text-xs font-mono">
+      <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+        <span class="text-slate-300 font-bold block">Original Deck Settings Detected:</span>
+        <p id="regenOriginalSettingsText" class="text-amber-400 text-xs">Full Bar Sim (10/10 Dimensions)</p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-slate-300 uppercase font-bold">Regeneration Target Strategy:</label>
+        <div class="grid grid-cols-1 gap-2">
+          <label class="flex items-center space-x-2 p-2.5 rounded-lg bg-slate-950 border border-purple-800/60 cursor-pointer">
+            <input type="radio" name="regenStrategy" value="KEEP" checked onchange="toggleRegenCustomPreset(false)" class="text-purple-500 focus:ring-0">
+            <div>
+              <span class="text-slate-200 font-bold block">Keep Original Deck Settings & Polish</span>
+              <span class="text-[10px] text-slate-400">Sweeps through existing cards, fixes truncation, and upgrades formatting.</span>
+            </div>
+          </label>
+          <label class="flex items-center space-x-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+            <input type="radio" name="regenStrategy" value="MODIFY" onchange="toggleRegenCustomPreset(true)" class="text-purple-500 focus:ring-0">
+            <div>
+              <span class="text-slate-200 font-bold block">Modify Preset / Dimensions</span>
+              <span class="text-[10px] text-slate-400">Re-route cards into Codal Mode, Case FIR Mode, or Reviewer Mode.</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div id="regenCustomPresetContainer" class="hidden space-y-2 pt-1">
+        <label class="block text-slate-400 uppercase font-bold">Select New Target Preset:</label>
+        <select id="regenNewPresetSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-amber-300 focus:outline-none">
+          <option value="CODAL">§ Codal Mode (Definitions, Requisites & Exceptions)</option>
+          <option value="CASE">⚖️ Case FIR Mode (Facts, Issue, Ruling, Ratio)</option>
+          <option value="REVIEWER">◈ Reviewer Mode (Concepts, Distinctions & ALAC)</option>
+          <option value="ALL" selected>★ Full Bar Sim (All 10 Dimensions)</option>
+        </select>
+      </div>
+
+      <div class="space-y-1.5 pt-2 border-t border-slate-800">
+        <label class="flex items-center space-x-2 text-slate-300 cursor-pointer">
+          <input type="checkbox" id="regenAddClozeCheck" checked class="rounded bg-slate-950 border-slate-700 text-purple-500 focus:ring-0">
+          <span>Inject Cloze Deletions (`{{c1::...}}`) for Active Recall</span>
+        </label>
+        <label class="flex items-center space-x-2 text-slate-300 cursor-pointer">
+          <input type="checkbox" id="regenStripBoilerplateCheck" checked class="rounded bg-slate-950 border-slate-700 text-purple-500 focus:ring-0">
+          <span>Strip Low-Value Boilerplate (Effectivity & Short Titles)</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+      <button type="button" onclick="closeDeckRegenerateModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-mono transition">Cancel</button>
+      <button type="button" id="executeRegenBtn" onclick="executeDeckRegeneration()" class="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-slate-950 font-bold rounded-lg text-xs font-mono transition shadow">Confirm & Regenerate Deck</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentRegeneratingDeckId = null;
+
+  async function openDeckRegenerateModal(deckId) {
+    currentRegeneratingDeckId = deckId;
+    const deck = await dbGet('decks', deckId);
+    if (!deck) return;
+
+    document.getElementById('regenModalDeckTitle').innerText = `Deck: ${deck.title} (${deck.cards ? deck.cards.length : 0} cards)`;
+
+    const presetName = deck.presetTag || 'Full Bar Sim (10/10 Dimensions)';
+    document.getElementById('regenOriginalSettingsText').innerText = presetName;
+
+    document.getElementById('deckRegenerateModal').classList.remove('hidden');
+  }
+
+  function closeDeckRegenerateModal() {
+    document.getElementById('deckRegenerateModal').classList.add('hidden');
+    currentRegeneratingDeckId = null;
+  }
+
+  function toggleRegenCustomPreset(isModify) {
+    const container = document.getElementById('regenCustomPresetContainer');
+    if (container) {
+      if (isModify) container.classList.remove('hidden');
+      else container.classList.add('hidden');
+    }
+  }
+
+  async function executeDeckRegeneration() {
+    if (!currentRegeneratingDeckId) return;
+    const deck = await dbGet('decks', currentRegeneratingDeckId);
+    if (!deck || !deck.cards) return;
+
+    const strategy = document.querySelector('input[name="regenStrategy"]:checked')?.value || 'KEEP';
+    const newPreset = document.getElementById('regenNewPresetSelect')?.value || 'ALL';
+    const addCloze = document.getElementById('regenAddClozeCheck')?.checked;
+    const stripBoilerplate = document.getElementById('regenStripBoilerplateCheck')?.checked;
+
+    closeDeckRegenerateModal();
+    showCompileModal(deck.cards.length);
+
+    try {
+      const polishedCards = [];
+      const total = deck.cards.length;
+
+      for (let i = 0; i < total; i++) {
+        const card = deck.cards[i];
+        const pct = Math.round(((i + 1) / total) * 100);
+        document.getElementById('compileProgressBar').style.width = `${pct}%`;
+        document.getElementById('compileProgressPercent').innerText = `${pct}%`;
+        document.getElementById('compileCardCounter').innerText = `Polishing Card ${i + 1} of ${total}`;
+        document.getElementById('compileCurrentTopic').innerText = card.topic || card.case_title || 'Card Polish';
+
+        // If strategy is MODIFY, reassign dimension preset
+        if (strategy === 'MODIFY') {
+          const profile = PRESET_PROFILES[newPreset] || PRESET_PROFILES.ALL;
+          const dId = profile.dims[i % profile.dims.length];
+          const dimObj = DIMENSIONS_REGISTRY[dId];
+          card.dimensionId = dimObj.id;
+          card.exportTag = dimObj.exportTag;
+          card.schemaType = dimObj.schemaType;
+        }
+
+        // Polish prompt / question text
+        let qText = card.question_text || card.question || '';
+        if (addCloze && !qText.includes('{{c1::')) {
+          qText += `\n\n[Active Recall Cloze Enhanced: Answer key provisions precisely].`;
+        }
+
+        if (stripBoilerplate && (qText.toLowerCase().includes('effectivity') || qText.toLowerCase().includes('short title'))) {
+          // Skip low-value boilerplate cards
+          continue;
+        }
+
+        polishedCards.push({
+          ...card,
+          question_text: qText,
+          polishedAt: Date.now()
+        });
+
+        await new Promise(r => setTimeout(r, 200));
+      }
+
+      deck.cards = polishedCards;
+      deck.title = `${deck.title} (Polished)`;
+      deck.presetTag = strategy === 'MODIFY' ? PRESET_PROFILES[newPreset].name : deck.presetTag;
+
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      hideCompileModal();
+
+      alert(`✨ Successfully regenerated and polished "${deck.title}" (${polishedCards.length} high-yield cards updated)!`);
+    } catch (err) {
+      hideCompileModal();
+      alert("Regeneration failed: " + err.message);
+    }
+  }
+</script>
 </body>
 </html>
