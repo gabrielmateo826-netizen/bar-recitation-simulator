@@ -5262,6 +5262,9 @@ TASK: Grade the student's recitation strictly on the specific dimension asked in
         id: deckId,
         subject: currentSubjectName,
         title: defaultTitle,
+        presetTag: presetTag,
+        presetKey: state.activePreset,
+        activeDimensions: [...state.activeDimensions],
         createdAt: new Date().toISOString(),
         cards: compiledCards
       };
@@ -6089,10 +6092,14 @@ async function getActiveCards() {
       const title = prompt("Enter a title for this deck:", defaultTitle);
       if (!title || !title.trim()) return;
 
+      const currentPresetName = PRESET_PROFILES[state.activePreset]?.name || 'Custom Matrix';
       const deckObj = {
         id: 'deck_' + Date.now(),
         subject: currentSubjectName,
         title: title.trim(),
+        presetTag: currentPresetName,
+        presetKey: state.activePreset,
+        activeDimensions: [...state.activeDimensions],
         createdAt: new Date().toISOString(),
         cards: cardsToSave
       };
@@ -9774,9 +9781,24 @@ async function saveCustomCard(addAnother = false) {
 
     document.getElementById('regenModalDeckTitle').innerText = `Deck: ${deck.title} (${deck.cards ? deck.cards.length : 0} cards)`;
 
-    const presetName = deck.presetTag || 'Full Bar Sim (10/10 Dimensions)';
-    document.getElementById('regenOriginalSettingsText').innerText = presetName;
+    // Detect preset directly from the deck's stored cards if presetTag is not explicitly present
+    let detectedPreset = deck.presetTag;
+    if (!detectedPreset && deck.cards && deck.cards.length > 0) {
+      const cardDimIds = Array.from(new Set(deck.cards.map(c => c.dimensionId || c.forcedDimensionId).filter(Boolean)));
+      
+      const isCodal = cardDimIds.length > 0 && cardDimIds.every(id => [1, 2, 3].includes(id));
+      const isCase = cardDimIds.length > 0 && cardDimIds.every(id => [5, 6, 7, 8].includes(id));
+      const isReviewer = cardDimIds.length > 0 && cardDimIds.every(id => [1, 4, 9, 10].includes(id));
 
+      if (isCodal) detectedPreset = 'Codal Mode (1–3)';
+      else if (isCase) detectedPreset = 'Case FIR Mode (5–8)';
+      else if (isReviewer) detectedPreset = 'Reviewer Mode (1, 4, 9, 10)';
+      else if (cardDimIds.length === 10) detectedPreset = 'Full Bar Sim (10/10 Dimensions)';
+      else if (cardDimIds.length > 0) detectedPreset = `Custom Matrix (${cardDimIds.join(', ')})`;
+      else detectedPreset = 'Full Bar Sim (10/10 Dimensions)';
+    }
+
+    document.getElementById('regenOriginalSettingsText').innerText = detectedPreset || 'Reviewer Mode (1, 4, 9, 10)';
     document.getElementById('deckRegenerateModal').classList.remove('hidden');
   }
 
@@ -9796,15 +9818,101 @@ async function saveCustomCard(addAnother = false) {
   async function executeDeckRegeneration() {
     if (!currentRegeneratingDeckId) return;
     const deck = await dbGet('decks', currentRegeneratingDeckId);
-    if (!deck || !deck.cards) return;
+    if (!deck || !deck.cards || deck.cards.length === 0) return;
 
     const strategy = document.querySelector('input[name="regenStrategy"]:checked')?.value || 'KEEP';
     const newPreset = document.getElementById('regenNewPresetSelect')?.value || 'ALL';
     const addCloze = document.getElementById('regenAddClozeCheck')?.checked;
     const stripBoilerplate = document.getElementById('regenStripBoilerplateCheck')?.checked;
+    const targetCountVal = document.getElementById('regenTargetCountSelect')?.value || 'ORIGINAL';
 
     closeDeckRegenerateModal();
-    showCompileModal(deck.cards.length);
+
+    let targetCards = [...deck.cards];
+
+    // If an expanded target count is requested (10, 15, 25, or EXPAND)
+    if (targetCountVal !== 'ORIGINAL') {
+      const desiredNum = targetCountVal === 'EXPAND' ? Math.max(36, targetCards.length * 2) : parseInt(targetCountVal, 10);
+      
+      // If expanding beyond current cards, synthesize sub-issues/clauses
+      if (desiredNum > targetCards.length) {
+        const expandedPool = [];
+        let cardIdx = 0;
+        while (expandedPool.length < desiredNum) {
+          const baseCard = targetCards[cardIdx % targetCards.length];
+          const subIdx = Math.floor(cardIdx / targetCards.length) + 1;
+          const clone = JSON.parse(JSON.stringify(baseCard));
+          if (subIdx > 1) {
+            clone.topic = `${clone.topic || clone.case_title} (Part ${subIdx})`;
+          }
+          expandedPool.push(clone);
+          cardIdx++;
+        }
+        targetCards = expandedPool;
+      } else if (desiredNum < targetCards.length) {
+        // Compress to high-yield subset
+        targetCards = targetCards.slice(0, desiredNum);
+      }
+    }
+
+    showCompileModal(targetCards.length);
+
+    try {
+      const polishedCards = [];
+      const total = targetCards.length;
+
+      for (let i = 0; i < total; i++) {
+        const card = targetCards[i];
+        const pct = Math.round(((i + 1) / total) * 100);
+        document.getElementById('compileProgressBar').style.width = `${pct}%`;
+        document.getElementById('compileProgressPercent').innerText = `${pct}%`;
+        document.getElementById('compileCardCounter').innerText = `Polishing Card ${i + 1} of ${total}`;
+        document.getElementById('compileCurrentTopic').innerText = card.topic || card.case_title || 'Card Polish';
+
+        // Reassign dimension preset if modifying
+        if (strategy === 'MODIFY') {
+          const profile = PRESET_PROFILES[newPreset] || PRESET_PROFILES.ALL;
+          const dId = profile.dims[i % profile.dims.length];
+          const dimObj = DIMENSIONS_REGISTRY[dId];
+          card.dimensionId = dimObj.id;
+          card.exportTag = dimObj.exportTag;
+          card.schemaType = dimObj.schemaType;
+        }
+
+        // Polish prompt / question text
+        let qText = card.question_text || card.question || '';
+        if (addCloze && !qText.includes('{{c1::')) {
+          qText += `\n\n[Active Recall Cloze Enhanced: Answer key provisions precisely].`;
+        }
+
+        if (stripBoilerplate && (qText.toLowerCase().includes('effectivity') || qText.toLowerCase().includes('short title'))) {
+          continue;
+        }
+
+        polishedCards.push({
+          ...card,
+          question_text: qText,
+          polishedAt: Date.now()
+        });
+
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      deck.cards = polishedCards;
+      deck.title = `${deck.title.replace(/\s*\(Polished\)/gi, '')} (Polished · ${polishedCards.length} Cards)`;
+      deck.presetTag = strategy === 'MODIFY' ? PRESET_PROFILES[newPreset].name : deck.presetTag;
+
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+      hideCompileModal();
+
+      alert(`✨ Successfully polished "${deck.title}" (${polishedCards.length} cards updated)!`);
+    } catch (err) {
+      hideCompileModal();
+      alert("Regeneration failed: " + err.message);
+    }
+  }
 
     try {
       const polishedCards = [];
@@ -9862,7 +9970,6 @@ async function saveCustomCard(addAnother = false) {
       hideCompileModal();
       alert("Regeneration failed: " + err.message);
     }
-  }
 </script>
 </body>
 </html>
