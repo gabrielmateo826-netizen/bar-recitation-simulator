@@ -26,6 +26,107 @@ This document chronicles the complete development history, architectural decisio
 
 * Auto-update EVOLUTION.md [skip ci] ([6e54511](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/6e54511d4a3bf5ffe343530f6c11505a6f4c4066))
 
+* Auto-update EVOLUTION.md [skip ci] ([32d7fe4](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/32d7fe4b09bb02f8b484ee32fc54d6e7d8357748))
+
+
+### Other Engineering Updates
+
+* Initialize Bar Recitation Simulator with universal macOS builder ([b3723c6](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/b3723c6a06f3a5106dd5a3c057344efc2e122b0a))
+
+* Fix workflow folder structure ([dd55fd6](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/dd55fd6fed12ca53a7d7fb6928e6fd61a6cf0faa))
+
+* Add Android build workflow ([1427046](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/142704616dc046bd6be3f78bac7787cd4e5bbf8a))
+
+* Fix Android SDK setup using native runner toolchains ([d1445d6](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/d1445d6a9bc7add8b93e8b5561558838942b0213))
+
+* Add GitHub Pages deployment from src folder ([4fad80a](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/4fad80a2e1e7978d92c23df594cc9e1c97cd6b45))
+
+* Fix Tauri Android target alias to aarch64 ([cdfc193](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/cdfc193e74413c8e21216ac695f6cf695e406770))
+
+* Fix YAML indentation and whitespace syntax on line 47 ([292e7ff](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/292e7ffc0d5b39b2669e8d6b6d357d23a22dd210))
+
+* Add export toolbar and switch frontend to live GitHub Pages URL ([765f0f6](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/765f0f675b577131fd80c89e59603d606d8b886a))
+
+* Build signed debug APK for direct sideloading ([c44e8e7](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/c44e8e73a870655964dc4c43e89a15a76e761ffb))
+
+* Fix YAML line 50 whitespace and build signed debug APK ([7603e6b](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/7603e6bf22bdac661a681be0669cf611755b0dab))
+
+* Fix syntax error at bottom of index.html ([74a181b](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/74a181ba415d10bc3b6242fb9208f061fd84764c))
+
+* Fix Tauri asset path to ../src and deploy updated hybrid simulator ([2a4462f](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/2a4462ffcc8a477fefb3f74ac23b73e9bed11f52))
+
+* Production release v0.1.0: finalized 10-step tour, smart video container, and elevated compiler modal ([a1bd641](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/a1bd641cef8aa63e511a714de8fb8287a37a1aae))
+
+* Production release v0.1.0: finalized 10-step tour, smart video container, and elevated compiler modal ([297d7d1](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/297d7d15b084b10b12ceacbc8cacad3736e2cf09))
+
+* Upgrade macOS runner image from macos-14 to macos-15 ([7fd89a0](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/7fd89a0cfd5dea275f1c8ea3200f44c9fce94da4))
+
+* Add universal Save As file picker for backups, decks, and study sheet exports ([a91c7b2](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/a91c7b25a5dd9d70bd20badb36b79c5c06526fd3))
+
+* Fix Special Rules routing, save-first deck compiler, and amendatory statute audit ([084f846](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/084f8460c4a5e9d642072cde0c187dc185232112))
+
+* Update Tauri remote URL and permissions ([90ecd62](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/90ecd623d6329773e46e55bf4b8d0168f3ffc972))
+
+* Update Tauri remote URL and permissions ([bc3a5d3](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/bc3a5d3997da3f10f726eb996650f5b14d78c08a))
+
+* Add non-destructive deck merge and duplication engine ([6bf0f40](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/6bf0f4020b3767ac801cd4b85928a3a1826092d8))
+
+* Fix syntax braces and add visual deck merge modal ([79b79c0](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/79b79c0b0618c744f9b47deb61d331270bcb2115))
+
+* Update remote endpoint to ph-bar-recit organization ([32fe81f](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/32fe81f66cfe26aeba907f6d9dd303ec79447905))
+
+* Convert app icon to 32-bit RGBA for Android ([5f9e9c9](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/5f9e9c9eb3c1d63776a6e86472ee011991b0013a))
+
+* Add valid Windows ICO icon and adjust runner configuration ([0f6ba06](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/0f6ba0639ec471ae6b921aa065afa1be8d716d43))
+
+* Remove duplicate merge controller block ([f41086c](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/f41086c9c0105ffa388541fc3821d7c058299151))
+
+* Switch macOS runner to macos-13 to clear queue ([428f36d](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/428f36d46d6d1dc6fb3e79515e51be88916e443c))
+
+* Update tauri config, bundle icons, and mac build workflow ([cd73d54](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/cd73d5459589dfde69a7f98004473ee3a30945a3))
+
+* Switch to active macos-14 runner ([f22ca44](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/f22ca448daf9c81d4a6acf88e5a88c1ba200418e))
+
+* Add artifact upload and restrict builds to manual dispatch ([abbc8e0](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/abbc8e09f839050382e25ebb34ef55e69f36ba6e))
+
+* Configure automatic GitHub Pages deployment ([a5b868f](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/a5b868fdb04abbfbba87754528715520800dd84e))
+
+* Fix async/await syntax guards and synchronize complete workspace build ([03c72fe](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/03c72fe335066edd5c0996b21e623a75d0b7d0f7))
+
+* Update to 6-digit PIN pair sync ([b647682](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/b647682357b8a559684c0082263187f2246c99cd))
+
+* Complete Parts 1-5: Session auto-resume, multi-paragraph scope parser, polish deck tool, and 6-digit PIN docs ([e2c70a7](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/e2c70a7f3d6b7e3db0541d6807c7d0206e91b5a1))
+
+* Fix scope parser regex and add card count selector to polish deck feature ([b2e7e53](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/b2e7e53ba01124be45e6e454d0a72a686edee3d5))
+
+# Philippine Bar Recitation Simulator Suite: Master Technical Evolution & Changelog
+
+This document chronicles the complete development history, architectural decisions, bug fixes, storage migrations, and feature milestones of the Philippine Bar Recitation Simulator suite.
+
+---
+## [Unreleased]
+
+### Bug Fixes & Engine Corrections
+
+* **(tour)** Eliminate page reload on subject selector during guided walkthrough ([328a1d0](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/328a1d085950df35f20c1e66bad464ce754a46f2))
+
+* **(changelog)** Prevent null timestamp error in git-cliff template ([0ebf1f4](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/0ebf1f43b708360c9d906d1addc1bb8d47b948ac))
+
+* **(polish)** Add dynamic preset auto-detection and adjustable card count sizing in polish modal ([5cd3cc9](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/5cd3cc9fc7d44affe22d278f1c1df92f697b030a))
+
+
+### Documentation & Guides
+
+* Auto-update EVOLUTION.md [skip ci] ([788c576](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/788c576f80e390202273daf3f0e32b2d82d51d4c))
+
+* Auto-update EVOLUTION.md [skip ci] ([ad254ef](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/ad254ef889eb1a842fe82eda222eb0ace1927869))
+
+* Update README with direct download links and web simulator hub ([7ca4149](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/7ca4149db82c30656b58eeea5e73ebce890d9741))
+
+* Auto-update EVOLUTION.md [skip ci] ([b884a5d](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/b884a5d0e1edee0b29addfad318ff3c15b27937b))
+
+* Auto-update EVOLUTION.md [skip ci] ([6e54511](https://github.com/ph-bar-recit/bar-recitation-simulator/commit/6e54511d4a3bf5ffe343530f6c11505a6f4c4066))
+
 
 ### Other Engineering Updates
 
