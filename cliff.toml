@@ -8,9 +8,9 @@ This document chronicles the complete development history, architectural decisio
 """
 body = """
 {% if version %}\
-    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | default(value=now()) | date(format="%Y-%m-%d") }}
 {% else %}\
-    ## [Unreleased] - {{ timestamp | date(format="%Y-%m-%d") }}
+    ## [Unreleased]
 {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | upper_first }}
