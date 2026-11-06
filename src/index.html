@@ -1928,7 +1928,7 @@
         { topic: "Judicial Affidavit Rule: Offer, Objections and Cross-Examination of Affiant (Sec. 6-7)", rule: "A.M. No. 12-8-8-SC, Sec. 6-7" },
         { topic: "Judicial Affidavit Rule: Effect of Non-Compliance, Failure to Submit and Excusable Delay (Sec. 9-10)", rule: "A.M. No. 12-8-8-SC, Sec. 9-10" }
       ],
-      "hague": [
+   "hague": [
         { topic: "1970 Hague Evidence Convention: Scope & Purpose of Letters of Request (Sec. 1-4)", rule: "A.M. No. 25-02-17-SC, Sec. 1-4" },
         { topic: "1970 Hague Evidence Convention: Central Authority & Transmittal Channels (Sec. 5-8)", rule: "A.M. No. 25-02-17-SC, Sec. 5-8" },
         { topic: "1970 Hague Evidence Convention: Requisites of Letter of Request & Model Form (Sec. 9-12)", rule: "A.M. No. 25-02-17-SC, Sec. 9-12" },
@@ -3695,7 +3695,7 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
               } else if (subLower.includes("commercial")) {
                 addCodalTopicUnique(`Commercial Law: Section ${sKey}`, `Commercial Law · Sec. ${sKey}`);
               } else {
-                // Robust check without the trailing boundary trap on periods
+                // Check if the typed scope refers to any A.M. circular, Republic Act, Convention, or custom statute
                 const hasCustomRuleOrMatter = /(?:A\.M\.|A\.M\b|Hague|Convention|Circular|Republic\s+Act|R\.A\.|Act|Administrative)/i.test(raw);
                 
                 if (hasCustomRuleOrMatter) {
@@ -3709,7 +3709,6 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
                   addCodalTopicUnique(`${entry.title} (Rule 130, Section ${sKey})`, `Rule 130, Section ${sKey}`);
                 } else {
                   addCodalTopicUnique(`Rule 130, Section ${sKey}`, `Rule 130, Section ${sKey}`);
-                }
                 }
               }
             }
@@ -3802,6 +3801,7 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
       }
 
       return finalPool;
+    }
 
     function assignDimensionToItem(item, index) {
       if (item.forcedDimensionId && DIMENSIONS_REGISTRY[item.forcedDimensionId]) {
