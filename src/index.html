@@ -1929,8 +1929,14 @@
         { topic: "Judicial Affidavit Rule: Effect of Non-Compliance, Failure to Submit and Excusable Delay (Sec. 9-10)", rule: "A.M. No. 12-8-8-SC, Sec. 9-10" }
       ],
       "hague": [
-        { topic: "1970 Hague Evidence Convention: Scope & Letters of Request (A.M. No. 25-02-17-SC)", rule: "A.M. No. 25-02-17-SC" },
-        { topic: "1970 Hague Evidence Convention: Central Authority & Execution of Request", rule: "A.M. No. 25-02-17-SC" }
+        { topic: "1970 Hague Evidence Convention: Scope & Purpose of Letters of Request (Sec. 1-4)", rule: "A.M. No. 25-02-17-SC, Sec. 1-4" },
+        { topic: "1970 Hague Evidence Convention: Central Authority & Transmittal Channels (Sec. 5-8)", rule: "A.M. No. 25-02-17-SC, Sec. 5-8" },
+        { topic: "1970 Hague Evidence Convention: Requisites of Letter of Request & Model Form (Sec. 9-12)", rule: "A.M. No. 25-02-17-SC, Sec. 9-12" },
+        { topic: "1970 Hague Evidence Convention: Execution of Request & Competent Judicial Authorities (Sec. 13-16)", rule: "A.M. No. 25-02-17-SC, Sec. 13-16" },
+        { topic: "1970 Hague Evidence Convention: Compulsory Measures & Privileges from Testifying (Sec. 17-20)", rule: "A.M. No. 25-02-17-SC, Sec. 17-20" },
+        { topic: "1970 Hague Evidence Convention: Pre-Trial Discovery of Documents Limitations (Sec. 21-25)", rule: "A.M. No. 25-02-17-SC, Sec. 21-25" },
+        { topic: "1970 Hague Evidence Convention: Taking of Evidence by Diplomatic Officers, Consular Agents & Commissioners (Sec. 26-30)", rule: "A.M. No. 25-02-17-SC, Sec. 26-30" },
+        { topic: "1970 Hague Evidence Convention: Refusal, Costs, Reimbursement & Effectivity (Sec. 31-36)", rule: "A.M. No. 25-02-17-SC, Sec. 31-36" }
       ],
       "rape shield": [
         { topic: "Rape Shield Rule: Inadmissibility of Complainant's Past Sexual Conduct / Reputation", rule: "Rule 130, Sec. 54 & Special Penal Laws" },
@@ -3688,12 +3694,14 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
                 addCodalTopicUnique(`Tax Code (NIRC): Section ${sKey}`, `NIRC · Sec. ${sKey}`);
               } else if (subLower.includes("commercial")) {
                 addCodalTopicUnique(`Commercial Law: Section ${sKey}`, `Commercial Law · Sec. ${sKey}`);
-              } else if (isGenericAmMatter) {
-                const amCleanTitle = raw.split(/(?:Section|Sec\.)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
-                addCodalTopicUnique(`${amCleanTitle}: Section ${sKey} (General Provisions)`, `${amCleanTitle} · Sec. ${sKey}`);
-                addCodalTopicUnique(`${amCleanTitle}: Section ${sKey} (Sub-clauses & Exceptions)`, `${amCleanTitle} · Sec. ${sKey}`);
               } else {
-                if (DETERMINISTIC_SUB_PROVISIONS[sKey]) {
+                // Check if the typed scope explicitly refers to a named rule, convention, or A.M. circular
+                const hasCustomRuleOrMatter = /\b(?:A\.M\.|Hague|Convention|Circular|Act|Rule\s+\d+|Administrative)\b/i.test(raw);
+                
+                if (hasCustomRuleOrMatter) {
+                  const customTitle = raw.split(/(?:Section|Sec\.)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
+                  addCodalTopicUnique(`${customTitle}: Section ${sKey}`, `${customTitle} · Sec. ${sKey}`);
+                } else if (DETERMINISTIC_SUB_PROVISIONS[sKey]) {
                   DETERMINISTIC_SUB_PROVISIONS[sKey].forEach(sub => addCodalTopicUnique(sub.subTopic, sub.rule));
                 } else if (CANONICAL_2019_CODAL_MAP[`130:${sKey}`]) {
                   const entry = CANONICAL_2019_CODAL_MAP[`130:${sKey}`];
