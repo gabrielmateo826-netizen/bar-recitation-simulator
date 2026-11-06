@@ -3608,41 +3608,41 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
         rawCodalTopics.push({ topic, rule_citation: rule, isCase: false });
       };
 
-// 1. Check Special Administrative Rules & Circulars Registry (Keywords & A.M. Numbers)
-const lowerRaw = raw.toLowerCase();
-      let matchedSpecialRule = false;
+      // 1. Check Special Administrative Rules & Circulars Registry (Keywords & A.M. Numbers)
+      const lowerRaw = raw.toLowerCase();
+            let matchedSpecialRule = false;
 
-      const AM_DOCKET_ALIAS_MAP = {
-        "004-07-sc": "child witness",
-        "00-4-07-sc": "child witness",
-        "06-11-5-sc": "dna",
-        "01-7-01-sc": "electronic evidence",
-        "21-06-08-sc": "body-worn",
-        "12-8-8-sc": "judicial affidavit",
-        "25-02-17-sc": "hague"
-      };
+            const AM_DOCKET_ALIAS_MAP = {
+              "004-07-sc": "child witness",
+              "00-4-07-sc": "child witness",
+              "06-11-5-sc": "dna",
+              "01-7-01-sc": "electronic evidence",
+              "21-06-08-sc": "body-worn",
+              "12-8-8-sc": "judicial affidavit",
+              "25-02-17-sc": "hague"
+            };
 
-      const hasExplicitSectionRange = /(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*\d+\s*(?:[-–—]|to|through)\s*\d+\b/i.test(raw);
+            const hasExplicitSectionRange = /(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*\d+\s*(?:[-–—]|to|through)\s*\d+\b/i.test(raw);
 
-      // If user typed only the circular name/number without section numbers (e.g. A.M. No. 25-02-17-SC)
-      if (!hasExplicitSectionRange) {
-        for (const [amNum, regKey] of Object.entries(AM_DOCKET_ALIAS_MAP)) {
-          if (lowerRaw.includes(amNum)) {
-            SPECIAL_RULES_TOPIC_REGISTRY[regKey].forEach(t => addCodalTopicUnique(t.topic, t.rule));
-            matchedSpecialRule = true;
-            break;
-          }
-        }
-        if (!matchedSpecialRule) {
-          for (const [key, topicsList] of Object.entries(SPECIAL_RULES_TOPIC_REGISTRY)) {
-            if (lowerRaw.includes(key)) {
-              topicsList.forEach(t => addCodalTopicUnique(t.topic, t.rule));
-              matchedSpecialRule = true;
-              break;
+            // If user typed only the circular name/number without section numbers (e.g. A.M. No. 25-02-17-SC)
+            if (!hasExplicitSectionRange) {
+              for (const [amNum, regKey] of Object.entries(AM_DOCKET_ALIAS_MAP)) {
+                if (lowerRaw.includes(amNum)) {
+                  SPECIAL_RULES_TOPIC_REGISTRY[regKey].forEach(t => addCodalTopicUnique(t.topic, t.rule));
+                  matchedSpecialRule = true;
+                  break;
+                }
+              }
+              if (!matchedSpecialRule) {
+                for (const [key, topicsList] of Object.entries(SPECIAL_RULES_TOPIC_REGISTRY)) {
+                  if (lowerRaw.includes(key)) {
+                    topicsList.forEach(t => addCodalTopicUnique(t.topic, t.rule));
+                    matchedSpecialRule = true;
+                    break;
+                  }
+                }
+              }
             }
-          }
-        }
-      }
 
       // 2. Explicit Section & Article Ranges
       if (!matchedSpecialRule) {
@@ -3655,14 +3655,12 @@ const lowerRaw = raw.toLowerCase();
           const hasArticleWord = /\b(?:Articles?|Arts?\.?)\b/i.test(raw);
           const subLower = currentSubjectName.toLowerCase();
           
-          // Check if this text belongs to a named special rule, Republic Act, or A.M. Circular
           const isSpecialLawOrCircular = /(?:A\.M\.|A\.M\b|Hague|Convention|Circular|Republic\s+Act|R\.A\.|Act|Administrative)/i.test(raw);
 
           if (startSec <= endSec && (endSec - startSec) <= 60) {
             for (let s = startSec; s <= endSec; s++) {
               const sKey = String(s);
 
-              // A. If a Special Law or Circular title is present, use ITS name (NEVER default to Rule 130)
               if (isSpecialLawOrCircular && !ruleExplicit) {
                 let customTitle = raw.split(/(?:Sections?|Secs?\.?|Articles?|Arts?\.?)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
                 if (!customTitle) customTitle = "Special Law / Circular";
@@ -3670,7 +3668,6 @@ const lowerRaw = raw.toLowerCase();
                 continue;
               }
 
-              // B. Special handling for Estafa (RPC Art. 315)
               if (sKey === "315" && subLower.includes("criminal")) {
                 addCodalTopicUnique(`Revised Penal Code: Article 315, Par. 1 (Swindling / Estafa by Syndicate or False Pretenses)`, `RPC · Art. 315, par. 1`);
                 addCodalTopicUnique(`Revised Penal Code: Article 315, Par. 2 (Estafa by Means of Fraudulent Alterations / Postdated Checks)`, `RPC · Art. 315, par. 2`);
@@ -3678,7 +3675,6 @@ const lowerRaw = raw.toLowerCase();
                 continue;
               }
 
-              // C. Explicit Rule Number provided (e.g. Rule 130, Section 3)
               if (ruleExplicit) {
                 if (ruleExplicit === "130" && DETERMINISTIC_SUB_PROVISIONS[sKey]) {
                   DETERMINISTIC_SUB_PROVISIONS[sKey].forEach(sub => addCodalTopicUnique(sub.subTopic, sub.rule));
@@ -3703,7 +3699,6 @@ const lowerRaw = raw.toLowerCase();
               } else if (subLower.includes("commercial")) {
                 addCodalTopicUnique(`Commercial Law: Section ${sKey}`, `Commercial Law · Sec. ${sKey}`);
               } else {
-                // Standard default only when NO special law or circular was named
                 if (DETERMINISTIC_SUB_PROVISIONS[sKey]) {
                   DETERMINISTIC_SUB_PROVISIONS[sKey].forEach(sub => addCodalTopicUnique(sub.subTopic, sub.rule));
                 } else if (CANONICAL_2019_CODAL_MAP[`130:${sKey}`]) {
