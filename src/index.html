@@ -9781,21 +9781,45 @@ async function saveCustomCard(addAnother = false) {
 
     document.getElementById('regenModalDeckTitle').innerText = `Deck: ${deck.title} (${deck.cards ? deck.cards.length : 0} cards)`;
 
-    // Detect preset directly from the deck's stored cards if presetTag is not explicitly present
+    // 1. Direct saved settings check
     let detectedPreset = deck.presetTag;
-    if (!detectedPreset && deck.cards && deck.cards.length > 0) {
-      const cardDimIds = Array.from(new Set(deck.cards.map(c => c.dimensionId || c.forcedDimensionId).filter(Boolean)));
-      
-      const isCodal = cardDimIds.length > 0 && cardDimIds.every(id => [1, 2, 3].includes(id));
-      const isCase = cardDimIds.length > 0 && cardDimIds.every(id => [5, 6, 7, 8].includes(id));
-      const isReviewer = cardDimIds.length > 0 && cardDimIds.every(id => [1, 4, 9, 10].includes(id));
 
-      if (isCodal) detectedPreset = 'Codal Mode (1–3)';
-      else if (isCase) detectedPreset = 'Case FIR Mode (5–8)';
-      else if (isReviewer) detectedPreset = 'Reviewer Mode (1, 4, 9, 10)';
-      else if (cardDimIds.length === 10) detectedPreset = 'Full Bar Sim (10/10 Dimensions)';
-      else if (cardDimIds.length > 0) detectedPreset = `Custom Matrix (${cardDimIds.join(', ')})`;
-      else detectedPreset = 'Full Bar Sim (10/10 Dimensions)';
+    // 2. Title pattern fallback check
+    if (!detectedPreset && deck.title) {
+      const lowerTitle = deck.title.toLowerCase();
+      if (lowerTitle.includes('reviewer mode')) detectedPreset = 'Reviewer Mode (1, 4, 9, 10)';
+      else if (lowerTitle.includes('codal mode')) detectedPreset = 'Codal Mode (1–3)';
+      else if (lowerTitle.includes('case fir mode')) detectedPreset = 'Case FIR Mode (5–8)';
+      else if (lowerTitle.includes('full bar sim')) detectedPreset = 'Full Bar Sim (10/10 Dimensions)';
+    }
+
+    // 3. Card dimension and schema fallback check
+    if (!detectedPreset && deck.cards && deck.cards.length > 0) {
+      const cardDimIds = Array.from(new Set(deck.cards.map(c => {
+        const raw = c.dimensionId || c.forcedDimensionId;
+        return raw !== undefined && raw !== null ? parseInt(raw, 10) : null;
+      }).filter(n => !isNaN(n) && n !== null)));
+
+      const hasAlac = deck.cards.some(c => c.benchmark_alac || c.schemaType === 'ALAC');
+      const hasFir = deck.cards.some(c => c.benchmark_fir || c.schemaType === 'FIR');
+      const hasCodal = deck.cards.some(c => c.benchmark_codal_breakdown || c.schemaType === 'CODAL');
+
+      if (cardDimIds.length > 0) {
+        const isCodal = cardDimIds.every(id => [1, 2, 3].includes(id));
+        const isCase = cardDimIds.every(id => [5, 6, 7, 8].includes(id));
+        const isReviewer = cardDimIds.every(id => [1, 4, 9, 10].includes(id));
+
+        if (isReviewer) detectedPreset = 'Reviewer Mode (1, 4, 9, 10)';
+        else if (isCodal) detectedPreset = 'Codal Mode (1–3)';
+        else if (isCase) detectedPreset = 'Case FIR Mode (5–8)';
+        else if (cardDimIds.length === 10) detectedPreset = 'Full Bar Sim (10/10 Dimensions)';
+        else detectedPreset = `Custom Matrix (${cardDimIds.join(', ')})`;
+      } else {
+        if (hasAlac && !hasFir) detectedPreset = 'Reviewer Mode (1, 4, 9, 10)';
+        else if (hasFir && !hasAlac && !hasCodal) detectedPreset = 'Case FIR Mode (5–8)';
+        else if (hasCodal && !hasAlac && !hasFir) detectedPreset = 'Codal Mode (1–3)';
+        else detectedPreset = 'Full Bar Sim (10/10 Dimensions)';
+      }
     }
 
     document.getElementById('regenOriginalSettingsText').innerText = detectedPreset || 'Reviewer Mode (1, 4, 9, 10)';
