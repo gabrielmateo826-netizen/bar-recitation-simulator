@@ -3617,19 +3617,24 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
         "25-02-17-sc": "hague"
       };
 
-      for (const [amNum, regKey] of Object.entries(AM_DOCKET_ALIAS_MAP)) {
-        if (lowerRaw.includes(amNum)) {
-          SPECIAL_RULES_TOPIC_REGISTRY[regKey].forEach(t => addCodalTopicUnique(t.topic, t.rule));
-          matchedSpecialRule = true;
-          break;
-        }
-      }
+      // Only trigger registry fallback if no explicit numerical section range is typed in scope
+      const hasExplicitSectionRange = /(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*\d+\s*(?:[-–—]|to|through)\s*\d+\b/i.test(raw);
 
-      if (!matchedSpecialRule) {
-        for (const [key, topicsList] of Object.entries(SPECIAL_RULES_TOPIC_REGISTRY)) {
-          if (lowerRaw.includes(key)) {
-            topicsList.forEach(t => addCodalTopicUnique(t.topic, t.rule));
+      if (!hasExplicitSectionRange) {
+        for (const [amNum, regKey] of Object.entries(AM_DOCKET_ALIAS_MAP)) {
+          if (lowerRaw.includes(amNum)) {
+            SPECIAL_RULES_TOPIC_REGISTRY[regKey].forEach(t => addCodalTopicUnique(t.topic, t.rule));
             matchedSpecialRule = true;
+            break;
+          }
+        }
+
+        if (!matchedSpecialRule) {
+          for (const [key, topicsList] of Object.entries(SPECIAL_RULES_TOPIC_REGISTRY)) {
+            if (lowerRaw.includes(key)) {
+              topicsList.forEach(t => addCodalTopicUnique(t.topic, t.rule));
+              matchedSpecialRule = true;
+            }
           }
         }
       }
@@ -9727,6 +9732,16 @@ async function saveCustomCard(addAnother = false) {
           <option value="CASE">⚖️ Case FIR Mode (Facts, Issue, Ruling, Ratio)</option>
           <option value="REVIEWER">◈ Reviewer Mode (Concepts, Distinctions & ALAC)</option>
           <option value="ALL" selected>★ Full Bar Sim (All 10 Dimensions)</option>
+        </select>
+      </div>
+      <div class="space-y-2 pt-1">
+        <label class="block text-slate-400 uppercase font-bold">Target Output Card Count:</label>
+        <select id="regenTargetCountSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-amber-300 focus:outline-none">
+          <option value="ORIGINAL" selected>Keep Original Deck Size (1:1 Sweep)</option>
+          <option value="10">10 High-Yield Cards (Quick Drill)</option>
+          <option value="15">15 Cards (Standard Bar Exam Partition)</option>
+          <option value="25">25 Cards (Exhaustive Drill)</option>
+          <option value="EXPAND">Exhaustive Unbundling (All Sub-Clauses & Paragraphs)</option>
         </select>
       </div>
 
