@@ -9854,11 +9854,9 @@ async function saveCustomCard(addAnother = false) {
 
     let targetCards = [...deck.cards];
 
-    // If an expanded target count is requested (10, 15, 25, or EXPAND)
     if (targetCountVal !== 'ORIGINAL') {
       const desiredNum = targetCountVal === 'EXPAND' ? Math.max(36, targetCards.length * 2) : parseInt(targetCountVal, 10);
       
-      // If expanding beyond current cards, synthesize sub-issues/clauses
       if (desiredNum > targetCards.length) {
         const expandedPool = [];
         let cardIdx = 0;
@@ -9874,7 +9872,6 @@ async function saveCustomCard(addAnother = false) {
         }
         targetCards = expandedPool;
       } else if (desiredNum < targetCards.length) {
-        // Compress to high-yield subset
         targetCards = targetCards.slice(0, desiredNum);
       }
     }
@@ -9893,7 +9890,6 @@ async function saveCustomCard(addAnother = false) {
         document.getElementById('compileCardCounter').innerText = `Polishing Card ${i + 1} of ${total}`;
         document.getElementById('compileCurrentTopic').innerText = card.topic || card.case_title || 'Card Polish';
 
-        // Reassign dimension preset if modifying
         if (strategy === 'MODIFY') {
           const profile = PRESET_PROFILES[newPreset] || PRESET_PROFILES.ALL;
           const dId = profile.dims[i % profile.dims.length];
@@ -9903,7 +9899,6 @@ async function saveCustomCard(addAnother = false) {
           card.schemaType = dimObj.schemaType;
         }
 
-        // Polish prompt / question text
         let qText = card.question_text || card.question || '';
         if (addCloze && !qText.includes('{{c1::')) {
           qText += `\n\n[Active Recall Cloze Enhanced: Answer key provisions precisely].`;
