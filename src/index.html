@@ -7745,8 +7745,8 @@ async function getActiveCards() {
           badge: "Step 2: Subject Workspace",
           narration: "Select the specific law subject you are studying from the dropdown menu, or create a custom subject workspace to keep your syllabus and decks organized.",
           action: async (el) => {
-            el.value = "Evidence";
-            el.dispatchEvent(new Event('change'));
+            el.focus();
+            await new Promise(r => setTimeout(r, 500));
           }
         },
         {
