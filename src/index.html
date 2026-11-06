@@ -3695,11 +3695,12 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
               } else if (subLower.includes("commercial")) {
                 addCodalTopicUnique(`Commercial Law: Section ${sKey}`, `Commercial Law · Sec. ${sKey}`);
               } else {
-                // Check if the typed scope explicitly refers to a named rule, convention, or A.M. circular
-                const hasCustomRuleOrMatter = /\b(?:A\.M\.|Hague|Convention|Circular|Act|Rule\s+\d+|Administrative)\b/i.test(raw);
+                // Robust check without the trailing boundary trap on periods
+                const hasCustomRuleOrMatter = /(?:A\.M\.|A\.M\b|Hague|Convention|Circular|Republic\s+Act|R\.A\.|Act|Administrative)/i.test(raw);
                 
                 if (hasCustomRuleOrMatter) {
-                  const customTitle = raw.split(/(?:Section|Sec\.)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
+                  let customTitle = raw.split(/(?:Sections?|Secs?\.?|Articles?|Arts?\.?)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
+                  if (!customTitle) customTitle = "Special Rule / Administrative Circular";
                   addCodalTopicUnique(`${customTitle}: Section ${sKey}`, `${customTitle} · Sec. ${sKey}`);
                 } else if (DETERMINISTIC_SUB_PROVISIONS[sKey]) {
                   DETERMINISTIC_SUB_PROVISIONS[sKey].forEach(sub => addCodalTopicUnique(sub.subTopic, sub.rule));
