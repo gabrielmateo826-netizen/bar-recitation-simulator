@@ -5521,7 +5521,7 @@ function extractCardParagraphsForExport(c) {
               Launch (${activeCards})
             </button>
             <!-- REGENERATE & POLISH -->
-            <button onclick="openDeckRegenerateModal('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-800/60 rounded font-mono text-[11px] transition font-semibold" title="Polish, unbundle paragraphs, or upgrade cards with Cloze deletions using AI">
+            <button type="button" onclick="event.stopPropagation(); window.openDeckRegenerateModal('${deck.id}')" ontouchend="event.stopPropagation(); window.openDeckRegenerateModal('${deck.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-purple-900 text-purple-300 border border-purple-800/60 rounded font-mono text-[11px] transition font-semibold cursor-pointer select-none" title="Polish, unbundle paragraphs, or upgrade cards with Cloze deletions using AI">
               ✨ Polish
             </button>
             
@@ -9881,11 +9881,15 @@ async function saveCustomCard(addAnother = false) {
     }
   }
 
-  function closeDeckRegenerateModal() {
-    const modal = document.getElementById('deckRegenerateModal');
-    if (modal) modal.classList.add('hidden');
-    currentRegeneratingDeckId = null;
-  }
+    function closeDeckRegenerateModal() {
+      const modal = document.getElementById('deckRegenerateModal');
+      if (modal) modal.classList.add('hidden');
+      currentRegeneratingDeckId = null;
+    }
+
+    // Explicit global window bindings for cross-platform event dispatch
+    window.openDeckRegenerateModal = openDeckRegenerateModal;
+    window.closeDeckRegenerateModal = closeDeckRegenerateModal;
 
   function toggleRegenCustomPreset(isModify) {
     const container = document.getElementById('regenCustomPresetContainer');
