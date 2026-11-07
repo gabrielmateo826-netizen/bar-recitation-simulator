@@ -3345,21 +3345,29 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
       const q = queryText || "";
       const lowerQuery = q.toLowerCase();
 
+      // Guard: Never default to Rules 128-133 if query explicitly mentions an A.M. circular or special convention
+      const isSpecialLaw = /(?:A\.M\.|A\.M\b|Hague|Convention|Circular|R\.A\.|Republic\s+Act)/i.test(q);
+
       // 1. Evidence & Rules of Court check (Rules 128 through 133)
       const targetSecNum = extractSectionNumberToken(q);
-      const targetRuleNum = extractRuleNumberToken(q) || (lowerQuery.includes('rule 133') ? "133" : (lowerQuery.includes('rule 129') ? "129" : (lowerQuery.includes('rule 128') ? "128" : "130")));
+      const explicitRule = extractRuleNumberToken(q);
 
-      if (targetSecNum && CANONICAL_2019_CODAL_MAP[`${targetRuleNum}:${targetSecNum}`]) {
-        return CANONICAL_2019_CODAL_MAP[`${targetRuleNum}:${targetSecNum}`].text;
-      }
+      // Only default to Rule 130 if it is NOT a special administrative matter/circular
+      if (!isSpecialLaw || explicitRule) {
+        const targetRuleNum = explicitRule || (lowerQuery.includes('rule 133') ? "133" : (lowerQuery.includes('rule 129') ? "129" : (lowerQuery.includes('rule 128') ? "128" : "130")));
 
-      // Concordance lookup
-      for (const [key, val] of Object.entries(EVIDENCE_2019_CONCORDANCE)) {
-        if (lowerQuery.includes(key)) {
-          const rNum = extractRuleNumberToken(val.rule) || "130";
-          const sNum = extractSectionNumberToken(val.section);
-          if (sNum && CANONICAL_2019_CODAL_MAP[`${rNum}:${sNum}`]) {
-            return CANONICAL_2019_CODAL_MAP[`${rNum}:${sNum}`].text;
+        if (targetSecNum && CANONICAL_2019_CODAL_MAP[`${targetRuleNum}:${targetSecNum}`]) {
+          return CANONICAL_2019_CODAL_MAP[`${targetRuleNum}:${targetSecNum}`].text;
+        }
+
+        // Concordance lookup
+        for (const [key, val] of Object.entries(EVIDENCE_2019_CONCORDANCE)) {
+          if (lowerQuery.includes(key)) {
+            const rNum = extractRuleNumberToken(val.rule) || "130";
+            const sNum = extractSectionNumberToken(val.section);
+            if (sNum && CANONICAL_2019_CODAL_MAP[`${rNum}:${sNum}`]) {
+              return CANONICAL_2019_CODAL_MAP[`${rNum}:${sNum}`].text;
+            }
           }
         }
       }
@@ -3381,11 +3389,12 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
       }
 
       // 3. Fallback to loaded PDF commentary/source chunks
-      if (inMemoryChunks.length > 0 && targetSecNum) {
+      if (inMemoryChunks.length > 0 && targetSecNum && (!isSpecialLaw || explicitRule)) {
+        const targetRule = explicitRule || "130";
         const matches = inMemoryChunks.filter(c =>
           c.isStatutoryHeader &&
           c.secNum === targetSecNum &&
-          c.ruleNum === targetRuleNum
+          c.ruleNum === targetRule
         );
         if (matches.length > 0) {
           return matches[0].text.split(/\n\n+/)[0].trim();
@@ -3393,6 +3402,27 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
       }
 
       return "";
+    }
+
+    function checkConcordanceNote(topicText) {
+      if (!topicText) return null;
+      const isSpecialLaw = /(?:A\.M\.|A\.M\b|Hague|Convention|Circular|R\.A\.|Republic\s+Act)/i.test(topicText);
+      if (isSpecialLaw && !extractRuleNumberToken(topicText)) {
+        return null; // Suppress Rule 130 default anchor on special administrative rules
+      }
+      let lower = topicText.toLowerCase();
+      for (const [key, val] of Object.entries(EVIDENCE_2019_CONCORDANCE)) {
+        if (lower.includes(key)) {
+          return `${val.name} is governed strictly by ${val.rule}, ${val.section}. ${val.note}`;
+        }
+      }
+      const secNum = extractSectionNumberToken(topicText);
+      const ruleNum = extractRuleNumberToken(topicText) || "130";
+      const canonical = secNum ? CANONICAL_2019_CODAL_MAP[`${ruleNum}:${secNum}`] : null;
+      if (canonical) {
+        return `Rule ${ruleNum}, Section ${secNum} (${canonical.title}) — Verbatim Statutory Anchor Active.`;
+      }
+      return null;
     }
 
     function retrieveRelevantExcerpts(queryText, maxChars = 3200) {
@@ -3647,39 +3677,35 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
 
       // 1. Check Special Administrative Rules & Circulars Registry (Keywords & A.M. Numbers)
       const lowerRaw = raw.toLowerCase();
-            let matchedSpecialRule = false;
+      let matchedSpecialRule = false;
 
-            const AM_DOCKET_ALIAS_MAP = {
-              "004-07-sc": "child witness",
-              "00-4-07-sc": "child witness",
-              "06-11-5-sc": "dna",
-              "01-7-01-sc": "electronic evidence",
-              "21-06-08-sc": "body-worn",
-              "12-8-8-sc": "judicial affidavit",
-              "25-02-17-sc": "hague"
-            };
+      const AM_DOCKET_ALIAS_MAP = {
+        "004-07-sc": "child witness",
+        "00-4-07-sc": "child witness",
+        "06-11-5-sc": "dna",
+        "01-7-01-sc": "electronic evidence",
+        "21-06-08-sc": "body-worn",
+        "12-8-8-sc": "judicial affidavit",
+        "25-02-17-sc": "hague"
+      };
 
-            const hasExplicitSectionRange = /(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*\d+\s*(?:[-–—]|to|through)\s*\d+\b/i.test(raw);
-
-            // If user typed only the circular name/number without section numbers (e.g. A.M. No. 25-02-17-SC)
-            if (!hasExplicitSectionRange) {
-              for (const [amNum, regKey] of Object.entries(AM_DOCKET_ALIAS_MAP)) {
-                if (lowerRaw.includes(amNum)) {
-                  SPECIAL_RULES_TOPIC_REGISTRY[regKey].forEach(t => addCodalTopicUnique(t.topic, t.rule));
-                  matchedSpecialRule = true;
-                  break;
-                }
-              }
-              if (!matchedSpecialRule) {
-                for (const [key, topicsList] of Object.entries(SPECIAL_RULES_TOPIC_REGISTRY)) {
-                  if (lowerRaw.includes(key)) {
-                    topicsList.forEach(t => addCodalTopicUnique(t.topic, t.rule));
-                    matchedSpecialRule = true;
-                    break;
-                  }
-                }
-              }
-            }
+      // Match A.M. docket alias first regardless of explicit section range presence
+      for (const [amNum, regKey] of Object.entries(AM_DOCKET_ALIAS_MAP)) {
+        if (lowerRaw.includes(amNum)) {
+          SPECIAL_RULES_TOPIC_REGISTRY[regKey].forEach(t => addCodalTopicUnique(t.topic, t.rule));
+          matchedSpecialRule = true;
+          break;
+        }
+      }
+      if (!matchedSpecialRule) {
+        for (const [key, topicsList] of Object.entries(SPECIAL_RULES_TOPIC_REGISTRY)) {
+          if (lowerRaw.includes(key)) {
+            topicsList.forEach(t => addCodalTopicUnique(t.topic, t.rule));
+            matchedSpecialRule = true;
+            break;
+          }
+        }
+      }
 
       // 2. Explicit Section & Article Ranges
       if (!matchedSpecialRule) {
