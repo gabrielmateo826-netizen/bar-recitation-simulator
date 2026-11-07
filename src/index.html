@@ -1478,10 +1478,18 @@
 
     async function generateCompleteMasterPayload() {
       const meta = await dbGetAllRaw('metadata');
-      const sources = await dbGetAllRaw('sources');
       const digests = await dbGetAllRaw('digests');
       const mastery = await dbGetAllRaw('mastery');
       const decks = await dbGetAllRaw('decks');
+
+      // Strip heavy raw source texts from PIN sync to keep payload under relay size limits (< 50KB)
+      const rawSources = await dbGetAllRaw('sources');
+      const lightweightSources = rawSources.map(s => ({
+        id: s.id,
+        subject: s.subject,
+        name: s.name,
+        text: '' // Omits multi-megabyte raw PDF text; decks and digests handle active study items
+      }));
 
       return {
         format: "ph_bar_recit_pin_sync_v1",
@@ -1489,7 +1497,7 @@
         syncDate: new Date().toISOString(),
         subject: currentSubjectName,
         metadata: meta,
-        sources: sources,
+        sources: lightweightSources,
         digests: digests,
         mastery: mastery,
         decks: decks
