@@ -1506,22 +1506,33 @@
       if (spinner) spinner.classList.remove('hidden');
 
       try {
-        // Generate random 6-digit numeric PIN
         const pin = Math.floor(100000 + Math.random() * 900000).toString();
         const formattedPin = `${pin.substring(0, 3)}-${pin.substring(3)}`;
 
-        // Package all current decks, sources, and mastery records
         const payload = await generateCompleteMasterPayload();
         const payloadString = JSON.stringify(payload);
 
-        // Deposit payload into ephemeral relay (expires in 900 seconds / 15 minutes)
-        const res = await fetch(`${PIN_RELAY_BASE}sync_${pin}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payloadString
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        if (!res.ok) throw new Error("Could not register sync code with relay.");
+        let res;
+        try {
+          res = await fetch(`${PIN_RELAY_BASE}sync_${pin}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payloadString,
+            signal: controller.signal
+          });
+        } catch (fetchErr) {
+          if (fetchErr.name === 'AbortError') {
+            throw new Error("Relay connection timed out after 8 seconds. Cloud sync relay unreachable.");
+          }
+          throw new Error("Network/CORS block: Relay endpoint unreachable (Brave Shields or offline). Use JSON Export backup.");
+        } finally {
+          clearTimeout(timeoutId);
+        }
+
+        if (!res.ok) throw new Error(`Relay returned HTTP status ${res.status}.`);
 
         if (pinVal) pinVal.innerText = formattedPin;
         if (pinBox) pinBox.classList.remove('hidden');
@@ -1533,10 +1544,10 @@
           badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-800 text-amber-300";
         }
 
-        alert(`Sync PIN Ready: ${formattedPin}\n\nOpen the simulator on your phone or tablet, enter this 6-digit code under Setup, and tap 'Pull & Merge'. Valid for 15 minutes.`);
+        alert(`Sync PIN Ready: ${formattedPin}\n\nOpen the simulator on your other device, enter this 6-digit code under Setup, and tap 'Pull & Merge'. Valid for 15 minutes.`);
       } catch (err) {
         console.error("PIN Generation Error:", err);
-        alert("Failed to generate sync PIN: " + err.message);
+        alert("⚠️ Failed to generate sync PIN:\n" + err.message);
         if (btnText) btnText.innerText = "Generate 6-Digit PIN";
       } finally {
         if (spinner) spinner.classList.add('hidden');
@@ -1553,19 +1564,35 @@
       }
 
       const btn = document.getElementById('pullSyncPinBtn');
-      const originalText = btn.innerText;
-      btn.innerText = "Downloading...";
-      btn.disabled = true;
+      const originalText = btn ? btn.innerText : "Pull & Merge";
+      if (btn) {
+        btn.innerText = "Downloading...";
+        btn.disabled = true;
+      }
 
       try {
-        const res = await fetch(`${PIN_RELAY_BASE}sync_${rawPin}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        let res;
+        try {
+          res = await fetch(`${PIN_RELAY_BASE}sync_${rawPin}`, { signal: controller.signal });
+        } catch (fetchErr) {
+          if (fetchErr.name === 'AbortError') {
+            throw new Error("Relay connection timed out after 8 seconds.");
+          }
+          throw new Error("Network/CORS block: Could not contact relay service.");
+        } finally {
+          clearTimeout(timeoutId);
+        }
+
         if (!res.ok) {
-          throw new Error("Invalid or expired PIN. Please generate a new code on your primary device.");
+          throw new Error("Invalid or expired PIN. Please generate a fresh code on your primary device.");
         }
 
         const remotePayload = await res.json();
         if (!remotePayload || !remotePayload.decks) {
-          throw new Error("Invalid sync payload received.");
+          throw new Error("Received malformed sync payload from relay.");
         }
 
         // Non-destructively merge Decks
@@ -1624,14 +1651,16 @@
           badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-950/70 border border-emerald-800 text-emerald-300";
         }
 
-        alert(`✅ Synced Successfully!\n\nImported ${remotePayload.decks.length} deck(s) and ${remotePayload.mastery.length} mastery records from device.`);
+        alert(`✅ Synced Successfully!\n\nImported ${remotePayload.decks.length} deck(s) and ${remotePayload.mastery.length} mastery records.`);
         if (input) input.value = '';
       } catch (err) {
         console.error("PIN Pull Error:", err);
-        alert("Sync Failed: " + err.message);
+        alert("⚠️ Sync Failed:\n" + err.message);
       } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
+        if (btn) {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
       }
     }
 
