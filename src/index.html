@@ -1513,7 +1513,7 @@
         const payloadString = JSON.stringify(payload);
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
 
         let res;
         try {
@@ -1524,15 +1524,12 @@
             signal: controller.signal
           });
         } catch (fetchErr) {
-          if (fetchErr.name === 'AbortError') {
-            throw new Error("Relay connection timed out after 8 seconds. Cloud sync relay unreachable.");
-          }
-          throw new Error("Network/CORS block: Relay endpoint unreachable (Brave Shields or offline). Use JSON Export backup.");
+          throw new Error("Cloud sync relay unreachable (CORS, ad-blocker, or offline).");
         } finally {
           clearTimeout(timeoutId);
         }
 
-        if (!res.ok) throw new Error(`Relay returned HTTP status ${res.status}.`);
+        if (!res.ok) throw new Error(`Relay error (Status ${res.status}).`);
 
         if (pinVal) pinVal.innerText = formattedPin;
         if (pinBox) pinBox.classList.remove('hidden');
@@ -1544,10 +1541,13 @@
           badge.className = "font-mono text-[11px] px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-800 text-amber-300";
         }
 
-        alert(`Sync PIN Ready: ${formattedPin}\n\nOpen the simulator on your other device, enter this 6-digit code under Setup, and tap 'Pull & Merge'. Valid for 15 minutes.`);
+        alert(`Sync PIN Ready: ${formattedPin}\n\nEnter this 6-digit code on Device B under Setup and tap 'Pull & Merge'. Valid for 15 minutes.`);
       } catch (err) {
-        console.error("PIN Generation Error:", err);
-        alert("⚠️ Failed to generate sync PIN:\n" + err.message);
+        console.warn("Relay sync unavailable, invoking file fallback:", err);
+        const useFallback = confirm(`⚠️ Wireless PIN Relay Unavailable (${err.message}).\n\nWould you like to export a direct Sync Snapshot (.json) file instead? You can send it via AirDrop, Bluetooth, or Drive to Device B.`);
+        if (useFallback) {
+          await exportWorkspaceJSON();
+        }
         if (btnText) btnText.innerText = "Generate 6-Digit PIN";
       } finally {
         if (spinner) spinner.classList.add('hidden');
@@ -1572,27 +1572,24 @@
 
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
 
         let res;
         try {
           res = await fetch(`${PIN_RELAY_BASE}sync_${rawPin}`, { signal: controller.signal });
         } catch (fetchErr) {
-          if (fetchErr.name === 'AbortError') {
-            throw new Error("Relay connection timed out after 8 seconds.");
-          }
-          throw new Error("Network/CORS block: Could not contact relay service.");
+          throw new Error("Cloud sync relay unreachable.");
         } finally {
           clearTimeout(timeoutId);
         }
 
         if (!res.ok) {
-          throw new Error("Invalid or expired PIN. Please generate a fresh code on your primary device.");
+          throw new Error("Invalid or expired PIN.");
         }
 
         const remotePayload = await res.json();
         if (!remotePayload || !remotePayload.decks) {
-          throw new Error("Received malformed sync payload from relay.");
+          throw new Error("Malformed payload received from relay.");
         }
 
         // Non-destructively merge Decks
@@ -1654,8 +1651,11 @@
         alert(`✅ Synced Successfully!\n\nImported ${remotePayload.decks.length} deck(s) and ${remotePayload.mastery.length} mastery records.`);
         if (input) input.value = '';
       } catch (err) {
-        console.error("PIN Pull Error:", err);
-        alert("⚠️ Sync Failed:\n" + err.message);
+        console.warn("PIN Pull failed, opening file import fallback:", err);
+        const useFallback = confirm(`⚠️ Could not reach wireless relay (${err.message}).\n\nWould you like to import a Sync Snapshot (.json) file from Device A instead?`);
+        if (useFallback) {
+          document.getElementById('importBackupInput')?.click();
+        }
       } finally {
         if (btn) {
           btn.innerText = originalText;
