@@ -350,6 +350,74 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- DECK POLISH & DEDUPLICATION MODAL                                         -->
+  <!-- ========================================================================= -->
+  <div id="deckPolishModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[74] hidden flex items-center justify-center p-3 md:p-6">
+    <div class="bg-slate-900 border border-purple-600/70 rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- HEADER -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div class="flex items-center space-x-3">
+          <span class="w-8 h-8 rounded bg-purple-600 flex items-center justify-center font-serif font-bold text-slate-950 text-base shadow">✨</span>
+          <div>
+            <h2 class="font-serif font-bold text-slate-100 text-base">Deck Polish & Deduplication Engine</h2>
+            <p id="polishModalDeckSubtitle" class="text-[11px] text-purple-300 font-mono">Clean redundancies, deduplicate overlapping cards, and sanitize formatting.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeDeckPolishModal()" class="text-slate-400 hover:text-slate-200 text-xl leading-none">&times;</button>
+      </div>
+
+      <!-- BODY -->
+      <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs text-slate-300">
+        <!-- AUDIT SUMMARY BANNER -->
+        <div class="p-4 bg-slate-950 rounded-xl border border-purple-800/60 flex items-center justify-between gap-3">
+          <div>
+            <span class="text-[10px] font-mono uppercase text-purple-400 font-bold block">Deck Redundancy Audit:</span>
+            <span id="polishDeckTotalCardsText" class="text-sm font-bold text-slate-100 block mt-0.5">Scanning deck...</span>
+          </div>
+          <span id="polishDuplicateBadge" class="px-3 py-1 rounded text-xs font-mono font-bold bg-amber-950 text-amber-300 border border-amber-800">
+            0 Redundant Cards Detected
+          </span>
+        </div>
+
+        <!-- OPTIONS -->
+        <div class="space-y-3 pt-1">
+          <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-1">
+            <b class="text-amber-400 font-mono block text-xs">1. Smart Multi-Pass Deduplication (0 ms Local Purge)</b>
+            <p class="text-slate-400 text-[11px] leading-relaxed">
+              Detects cards testing identical statutory sections, identical Supreme Court case captions, or identical prompt questions under identical dimensions. Merges multi-angle duplicates and purges redundant copies while preserving the most complete benchmark.
+            </p>
+          </div>
+
+          <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-1">
+            <b class="text-sky-400 font-mono block text-xs">2. Universal Text & Tag Sanitization</b>
+            <p class="text-slate-400 text-[11px] leading-relaxed">
+              Strips bracketed artifacts like <code class="text-amber-300">[Active Recall Cloze Enhanced: ...]</code>, cleans raw Markdown spacing, and ensures uniform question headers for smooth recitation and clean study sheet exports.
+            </p>
+          </div>
+        </div>
+
+        <!-- DUPLICATE PREVIEW LIST -->
+        <div class="space-y-1.5">
+          <span class="text-[11px] font-mono uppercase text-slate-400 font-bold block">Redundant Cards Flagged for Removal:</span>
+          <div id="polishDuplicatesList" class="p-3 bg-slate-950 rounded-lg border border-slate-800 max-h-48 overflow-y-auto space-y-2 font-mono text-[11px] text-slate-400">
+            <span class="italic text-slate-500">Scanning deck for duplicates...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+        <span id="polishActionStatus" class="text-xs font-mono text-slate-400">Ready to clean deck</span>
+        <div class="flex items-center space-x-2.5">
+          <button type="button" onclick="closeDeckPolishModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-lg text-xs font-mono transition">Cancel</button>
+          <button type="button" id="executePolishPurgeBtn" onclick="executeDeckDeduplication()" class="bg-purple-600 hover:bg-purple-500 text-slate-950 font-bold px-5 py-2 rounded-lg text-xs font-mono transition shadow flex items-center space-x-1.5">
+            <span>⚡ Purge Redundancies & Clean Deck</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ========================================================================= -->
   <!-- DECK MERGE & UNMERGE WORKSPACE MODAL                                      -->
   <!-- ========================================================================= -->
   <div id="deckMergeModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[72] hidden flex items-center justify-center p-3 md:p-6">
@@ -654,7 +722,13 @@
 
       <!-- FOOTER -->
       <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
-        <span id="cardStudioFooterStatus" class="text-xs font-mono text-slate-400">Ready to save</span>
+        <div class="flex items-center space-x-3">
+          <button type="button" id="deleteCardFromStudioBtn" onclick="deleteActiveEditingCard()" class="hidden px-3.5 py-2 bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-800 rounded-lg text-xs font-mono font-bold transition flex items-center space-x-1.5 cursor-pointer">
+            <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            <span>Delete Card</span>
+          </button>
+          <span id="cardStudioFooterStatus" class="text-xs font-mono text-slate-400">Ready to save</span>
+        </div>
         <div class="flex items-center space-x-2.5">
           <button type="button" onclick="closeCardCreatorModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-lg text-xs font-mono transition">Cancel</button>
           <button type="button" id="saveAndAddAnotherBtn" onclick="saveCustomCard(true)" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/60 font-bold px-4 py-2 rounded-lg text-xs font-mono transition">Save & Add Another</button>
@@ -2269,6 +2343,26 @@
       return text.trim();
     }
 
+    function sanitizeQuestionPrompt(text) {
+      if (!text) return '';
+      return text
+        .replace(/\[\s*Active Recall Cloze Enhanced:[^\]]*\]/gi, '')
+        .replace(/\(\s*Active Recall Cloze Enhanced:[^\)]*\)/gi, '')
+        .replace(/\[\s*(?:Note|Instruction|Directive|Prompt Tag):[^\]]*\]/gi, '')
+        .replace(/\n\s*\n\s*\n+/g, '\n\n')
+        .trim();
+    }
+
+    function sanitizeQuestionPrompt(text) {
+      if (!text) return '';
+      return text
+        .replace(/\[\s*Active Recall Cloze Enhanced:[^\]]*\]/gi, '')
+        .replace(/\(\s*Active Recall Cloze Enhanced:[^\)]*\)/gi, '')
+        .replace(/\[\s*(?:Note|Instruction|Directive|Prompt Tag):[^\]]*\]/gi, '')
+        .replace(/\n\s*\n\s*\n+/g, '\n\n')
+        .trim();
+    }
+
     function checkConcordanceNote(topicText) {
       if (!topicText) return null;
       let lower = topicText.toLowerCase();
@@ -3665,7 +3759,6 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
       if (!raw) return [];
 
       const rawCodalTopics = [];
-      const caseItems = parseSyllabusCases(raw);
       const seenCodalKeys = new Set();
 
       const addCodalTopicUnique = (topic, rule) => {
@@ -3674,10 +3767,6 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
         seenCodalKeys.add(dedupKey);
         rawCodalTopics.push({ topic, rule_citation: rule, isCase: false });
       };
-
-      // 1. Check Special Administrative Rules & Circulars Registry (Keywords & A.M. Numbers)
-      const lowerRaw = raw.toLowerCase();
-      let matchedSpecialRule = false;
 
       const AM_DOCKET_ALIAS_MAP = {
         "004-07-sc": "child witness",
@@ -3689,54 +3778,88 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
         "25-02-17-sc": "hague"
       };
 
-      // Match A.M. docket alias first regardless of explicit section range presence
-      for (const [amNum, regKey] of Object.entries(AM_DOCKET_ALIAS_MAP)) {
-        if (lowerRaw.includes(amNum)) {
-          SPECIAL_RULES_TOPIC_REGISTRY[regKey].forEach(t => addCodalTopicUnique(t.topic, t.rule));
-          matchedSpecialRule = true;
-          break;
-        }
-      }
-      if (!matchedSpecialRule) {
-        for (const [key, topicsList] of Object.entries(SPECIAL_RULES_TOPIC_REGISTRY)) {
-          if (lowerRaw.includes(key)) {
-            topicsList.forEach(t => addCodalTopicUnique(t.topic, t.rule));
-            matchedSpecialRule = true;
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const subLower = currentSubjectName.toLowerCase();
+
+      // =========================================================================
+      // PASS 1: LINE-BY-LINE SPECIAL ADMINISTRATIVE RULES & CIRCULARS REGISTRY
+      // =========================================================================
+      const matchedSpecialRulesThisRun = new Set();
+      for (const line of lines) {
+        const lowerLine = line.toLowerCase();
+        let lineMatched = false;
+
+        for (const [amNum, regKey] of Object.entries(AM_DOCKET_ALIAS_MAP)) {
+          if (lowerLine.includes(amNum)) {
+            if (!matchedSpecialRulesThisRun.has(regKey)) {
+              matchedSpecialRulesThisRun.add(regKey);
+              if (SPECIAL_RULES_TOPIC_REGISTRY[regKey]) {
+                SPECIAL_RULES_TOPIC_REGISTRY[regKey].forEach(t => addCodalTopicUnique(t.topic, t.rule));
+              }
+            }
+            lineMatched = true;
             break;
+          }
+        }
+
+        if (!lineMatched) {
+          for (const [key, topicsList] of Object.entries(SPECIAL_RULES_TOPIC_REGISTRY)) {
+            if (lowerLine.includes(key) && !lowerLine.includes('v.') && !lowerLine.includes('vs.')) {
+              if (!matchedSpecialRulesThisRun.has(key)) {
+                matchedSpecialRulesThisRun.add(key);
+                topicsList.forEach(t => addCodalTopicUnique(t.topic, t.rule));
+              }
+              break;
+            }
           }
         }
       }
 
-      // 2. Explicit Section & Article Ranges
-      if (!matchedSpecialRule) {
+      // =========================================================================
+      // PASS 2: EXPLICIT SECTION & ARTICLE RANGES (LINE-BY-LINE AVOID BLEED)
+      // =========================================================================
+      for (const line of lines) {
+        // Skip lines already handled by special law dockets
+        if (/(?:A\.M\.|A\.M\b|Hague|Convention|Circular)/i.test(line) && !/\bRule\s*\d+/i.test(line)) {
+          continue;
+        }
+
+        // Check for cross-rule ranges (e.g. Rule 128 Section 1 - Rule 129 Section 4)
+        const crossRuleMatch = line.match(/Rule\s*(\d{1,3})\s*(?:Section|Sec\.)\s*(\d{1,3})\s*(?:[-–—]|to|through)\s*Rule\s*(\d{1,3})\s*(?:Section|Sec\.)\s*(\d{1,3})/i);
+        if (crossRuleMatch) {
+          const rStart = parseInt(crossRuleMatch[1], 10);
+          const sStart = parseInt(crossRuleMatch[2], 10);
+          const rEnd = parseInt(crossRuleMatch[3], 10);
+          const sEnd = parseInt(crossRuleMatch[4], 10);
+
+          for (let r = rStart; r <= rEnd; r++) {
+            const startS = (r === rStart) ? sStart : 1;
+            const endS = (r === rEnd) ? sEnd : (r === 128 ? 4 : (r === 129 ? 4 : 54));
+            for (let s = startS; s <= endS; s++) {
+              const key = `${r}:${s}`;
+              if (CANONICAL_2019_CODAL_MAP[key]) {
+                const entry = CANONICAL_2019_CODAL_MAP[key];
+                addCodalTopicUnique(`${entry.title} (Rule ${r}, Section ${s})`, `Rule ${r}, Section ${s}`);
+              } else {
+                addCodalTopicUnique(`Rule ${r}, Section ${s}`, `Rule ${r}, Section ${s}`);
+              }
+            }
+          }
+          continue;
+        }
+
+        // Standard single-rule range (e.g. Rule 130 Section 37-50 or Articles 1156 to 1160)
         const rangeRegex = /(?:(?:Rule|Articles?|Arts?\.?)\s*(\d{1,4})[,:\s]+)?(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*(\d{1,4})\s*(?:[-–—]|to|through)\s*(\d{1,4})\b/gi;
         let rangeMatch;
-        while ((rangeMatch = rangeRegex.exec(raw)) !== null) {
-          const ruleExplicit = rangeMatch[1] || extractRuleNumberToken(raw);
+        while ((rangeMatch = rangeRegex.exec(line)) !== null) {
+          const ruleExplicit = rangeMatch[1] || extractRuleNumberToken(line);
           const startSec = parseInt(rangeMatch[2], 10);
           const endSec = parseInt(rangeMatch[3], 10);
-          const hasArticleWord = /\b(?:Articles?|Arts?\.?)\b/i.test(raw);
-          const subLower = currentSubjectName.toLowerCase();
-          
-          const isSpecialLawOrCircular = /(?:A\.M\.|A\.M\b|Hague|Convention|Circular|Republic\s+Act|R\.A\.|Act|Administrative)/i.test(raw);
+          const hasArticleWord = /\b(?:Articles?|Arts?\.?)\b/i.test(line);
 
           if (startSec <= endSec && (endSec - startSec) <= 60) {
             for (let s = startSec; s <= endSec; s++) {
               const sKey = String(s);
-
-              if (isSpecialLawOrCircular && !ruleExplicit) {
-                let customTitle = raw.split(/(?:Sections?|Secs?\.?|Articles?|Arts?\.?)/i)[0].trim().replace(/[-–—,:;\s]+$/, '');
-                if (!customTitle) customTitle = "Special Law / Circular";
-                addCodalTopicUnique(`${customTitle}: Section ${sKey}`, `${customTitle} · Sec. ${sKey}`);
-                continue;
-              }
-
-              if (sKey === "315" && subLower.includes("criminal")) {
-                addCodalTopicUnique(`Revised Penal Code: Article 315, Par. 1 (Swindling / Estafa by Syndicate or False Pretenses)`, `RPC · Art. 315, par. 1`);
-                addCodalTopicUnique(`Revised Penal Code: Article 315, Par. 2 (Estafa by Means of Fraudulent Alterations / Postdated Checks)`, `RPC · Art. 315, par. 2`);
-                addCodalTopicUnique(`Revised Penal Code: Article 315, Par. 3 (Estafa through Inducing Another to Sign Documents)`, `RPC · Art. 315, par. 3`);
-                continue;
-              }
 
               if (ruleExplicit) {
                 if (ruleExplicit === "130" && DETERMINISTIC_SUB_PROVISIONS[sKey]) {
@@ -3776,26 +3899,35 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
         }
       }
 
-      // 3. Non-range, non-case lines from typed scope (run only if not already decomposed)
-      if (!matchedSpecialRule) {
-        const stitched = stitchWrappedSyllabusLines(raw);
-        for (const line of stitched) {
-          if (/^(?:Module\s+\d+|Part\s+\d+|Do\s+not\s+include)/i.test(line)) continue;
-          if (/(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*\d+\s*(?:[-–—]|to|through)\s*\d+/i.test(line)) continue;
+      // =========================================================================
+      // PASS 3: CASE CITATIONS (EXTRACTED VIA PARSESYLLABUSCASES)
+      // =========================================================================
+      const caseItems = parseSyllabusCases(raw);
 
-          const cleanLine = line.replace(/^[-*•■\s]+/, '').replace(/^(?:[a-z]|\d+|[ivx]+)[\.\)]\s*/i, '').trim();
-          if (cleanLine.length < 4) continue;
+      // =========================================================================
+      // PASS 4: DOCTRINAL TOPICS & SYLLABUS HEADINGS (NON-CASE, NON-RANGE)
+      // =========================================================================
+      const stitched = stitchWrappedSyllabusLines(raw);
+      for (const line of stitched) {
+        if (/^(?:Module\s+\d+|Part\s+\d+|Do\s+not\s+include)/i.test(line)) continue;
+        if (/(?:Sections?|Secs?\.?|Articles?|Arts?\.?)\s*\d+\s*(?:[-–—]|to|through)\s*\d+/i.test(line)) continue;
+        if (/Rule\s*\d+\s*(?:Section|Sec\.)/i.test(line)) continue;
+        if (/(?:A\.M\.|A\.M\b|Hague|Convention|Circular)/i.test(line)) continue;
 
-          const isCaseLine = /\s+(?:v\b\.?|vs\b\.?|versus)\s+/i.test(cleanLine) ||
-                             /\b(?:G\.R\.|A\.C\.|A\.M\.|B\.M\.|UDK|L-\d)\b/i.test(cleanLine) ||
-                             /^(?:In\s+re\b|In\s+the\s+matter\s+of\b)/i.test(cleanLine);
-          if (isCaseLine) continue;
+        const cleanLine = line.replace(/^[-*•■\s]+/, '').replace(/^(?:[a-z]|\d+|[ivx]+)[\.\)]\s*/i, '').trim();
+        if (cleanLine.length < 4 || cleanLine.length > 120) continue;
 
-          addCodalTopicUnique(cleanLine, sanitizeCitation(cleanLine));
-        }
+        const isCaseLine = /\s+(?:v\b\.?|vs\b\.?|versus)\s+/i.test(cleanLine) ||
+                           /\b(?:G\.R\.|A\.C\.|A\.M\.|B\.M\.|UDK|L-\d)\b/i.test(cleanLine) ||
+                           /^(?:In\s+re\b|In\s+the\s+matter\s+of\b)/i.test(cleanLine);
+        if (isCaseLine) continue;
+
+        addCodalTopicUnique(cleanLine, sanitizeCitation(cleanLine));
       }
 
-// 3. Route strictly according to Active Dimensions
+      // =========================================================================
+      // PASS 5: UNIFIED AGGREGATION ACROSS ACTIVE DIMENSIONS
+      // =========================================================================
       const activeIds = state.activeDimensions.length > 0 ? state.activeDimensions : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
       const activeCodalDims = activeIds.filter(d => [1, 2, 3].includes(d));
       const activeReviewerDims = activeIds.filter(d => [1, 4, 9, 10].includes(d));
@@ -3806,7 +3938,7 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
 
       const finalPool = [];
 
-      // 1. PURE CODAL MULTIPLIER (Dimensions 1, 2, 3) -> 3 Atomic Cards Per Topic
+      // Pure Codal Multiplier (Dimensions 1, 2, 3)
       if (isPureCodalMode && rawCodalTopics.length > 0) {
         for (const cItem of rawCodalTopics) {
           for (const dId of activeCodalDims) {
@@ -3823,7 +3955,7 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
         return finalPool;
       }
 
-      // 2. PURE REVIEWER MULTIPLIER (Dimensions 1, 4, 9, 10) -> 4 Atomic Cards Per Topic
+      // Pure Reviewer Multiplier (Dimensions 1, 4, 9, 10)
       if (isPureReviewerMode && rawCodalTopics.length > 0) {
         for (const rItem of rawCodalTopics) {
           for (const dId of activeReviewerDims) {
@@ -3840,7 +3972,7 @@ const hasSeenVideo = localStorage.getItem('bar_has_seen_video_tutorial');
         return finalPool;
       }
 
-      // 3. MIXED / HYBRID / FULL BAR SIMULATION MODE
+      // Full Multi-Angle Assembly: Codals + Cases + Companion Pairs
       if (activeCodalDims.length > 0 || activeReviewerDims.length > 0) {
         finalPool.push(...rawCodalTopics);
       }
@@ -4429,7 +4561,11 @@ TASK:
         }];
 
         const rawJson = await callGemini(prompt, "You are a Philippine Law Professor conducting a comparative case recitation.", compSchema);
-        return parseAIJson(rawJson);
+        const parsedComp = parseAIJson(rawJson);
+        if (parsedComp && parsedComp.question_text) {
+          parsedComp.question_text = sanitizeQuestionPrompt(parsedComp.question_text);
+        }
+        return parsedComp;
       }
 
       // 2. SINGLE CASE FIR ARCHETYPES (DIMENSIONS 5, 6, 7)
@@ -4457,7 +4593,7 @@ TASK:
 
         if (digest && (digest.facts || digest.ruling)) {
           return {
-            question_text: qText,
+            question_text: sanitizeQuestionPrompt(qText),
             benchmark_fir: {
               facts: digest.facts,
               issue: digest.issue,
@@ -4537,6 +4673,9 @@ CRITICAL ANTI-TRUNCATION MANDATE (PHASE 6):
         // Auto-heal truncation using local canonical registry if AI cut off mid-list
         parsed.codal_provision_text = verbatim || healTruncatedStatutoryText(parsed.benchmark_codal_breakdown.operative_rule_summary, cleanTopicName);
         parsed.benchmark_codal_breakdown.operative_rule_summary = healTruncatedStatutoryText(parsed.benchmark_codal_breakdown.operative_rule_summary, cleanTopicName);
+        if (parsed.question_text) {
+          parsed.question_text = sanitizeQuestionPrompt(parsed.question_text);
+        }
         return parsed;
       }
 
@@ -4602,6 +4741,9 @@ In benchmark_alac:
       // Auto-heal ALAC Legal Basis if AI omitted the substantive rule text
       if (parsed.benchmark_alac && parsed.benchmark_alac.p2_legal_basis) {
         parsed.benchmark_alac.p2_legal_basis = healTruncatedAlacBasis(parsed.benchmark_alac.p2_legal_basis, verbatimBasis || cleanTopicName);
+      }
+      if (parsed.question_text) {
+        parsed.question_text = sanitizeQuestionPrompt(parsed.question_text);
       }
       return parsed;
     }
@@ -4783,7 +4925,7 @@ In benchmark_alac:
           pkg = await generateQuestionPackage(currentItem, qIndex, state.totalQuestions);
         }
 
-        state.currentQuestionText = pkg.question_text;
+        state.currentQuestionText = sanitizeQuestionPrompt(pkg.question_text || currentItem.question_text || '');
         state.currentBenchmarkPayload = pkg;
 
         const cardRecord = {
@@ -5437,12 +5579,13 @@ function extractCardParagraphsForExport(c) {
       deck.cards.forEach((c, idx) => {
         const qNum = idx + 1;
         const headerLine = formatExportQuestionHeader(c, qNum);
-        const question = c.question_text || '';
+        const rawQuestion = c.question_text || c.question || '';
+        const question = sanitizeQuestionPrompt(stripBolds(rawQuestion));
 
         md += `**${headerLine}**\n\n`;
-        md += `**${stripBolds(question)}**\n\n`;
+        md += `**${question}**\n\n`;
 
-        const cleanParas = extractCardParagraphsForExport(c);
+        const cleanParas = extractCardParagraphsForExport(c).map(p => sanitizeQuestionPrompt(p));
         md += cleanParas.join('\n\n');
         md += `\n\n---\n\n`;
       });
@@ -5481,12 +5624,13 @@ function extractCardParagraphsForExport(c) {
       deck.cards.forEach((c, idx) => {
         const qNum = idx + 1;
         const headerLine = formatExportQuestionHeader(c, qNum);
-        const question = c.question_text || '';
+        const rawQuestion = c.question_text || c.question || '';
+        const question = sanitizeQuestionPrompt(stripBolds(rawQuestion));
 
         docHtml += `<div class="q-title">${escapeHtml(headerLine)}</div>`;
-        docHtml += `<div class="q-prompt">${escapeHtml(stripBolds(question))}</div>`;
+        docHtml += `<div class="q-prompt">${escapeHtml(question)}</div>`;
 
-        const cleanParas = extractCardParagraphsForExport(c);
+        const cleanParas = extractCardParagraphsForExport(c).map(p => sanitizeQuestionPrompt(p));
         cleanParas.forEach(p => {
           docHtml += `<p class="ans-para">${escapeHtml(p)}</p>`;
         });
@@ -5740,9 +5884,305 @@ function extractCardParagraphsForExport(c) {
       onMergeDeckSelectionChanged();
     }
 
+    let activeEditingCardIndex = null;
+    let activeEditingDeckId = null;
+
     function closeMergeModal() {
       document.getElementById('deckMergeModal').classList.add('hidden');
       editingMergeCardContext = null;
+    }
+
+    let activePolishDeckId = null;
+    let flaggedDuplicates = [];
+
+    window.openDeckRegenerateModal = function(deckId) {
+      openDeckPolishModal(deckId);
+    };
+
+    async function openDeckPolishModal(deckId) {
+      activePolishDeckId = deckId;
+      const deck = await dbGet('decks', deckId);
+      if (!deck || !deck.cards || deck.cards.length === 0) {
+        alert("This deck has no cards to polish or deduplicate.");
+        return;
+      }
+
+      const modal = document.getElementById('deckPolishModal');
+      const subtitle = document.getElementById('polishModalDeckSubtitle');
+      const totalText = document.getElementById('polishDeckTotalCardsText');
+      const dupBadge = document.getElementById('polishDuplicateBadge');
+      const dupList = document.getElementById('polishDuplicatesList');
+      const purgeBtn = document.getElementById('executePolishPurgeBtn');
+
+      if (subtitle) subtitle.innerText = `Deck: "${deck.title}" (${deck.cards.length} Total Cards)`;
+      if (totalText) totalText.innerText = `${deck.cards.length} Cards in Deck`;
+
+      // Scan and find duplicate cards
+      flaggedDuplicates = [];
+      const seenSignatures = new Map();
+      const duplicateIndices = new Set();
+
+      deck.cards.forEach((card, idx) => {
+        const rawTopic = (card.baseTopic || card.topic || card.case_title || '').trim().toLowerCase();
+        const dimId = card.dimensionId || card.forcedDimensionId || 'general';
+        const cleanPrompt = sanitizeQuestionPrompt(card.question_text || card.question || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+
+        // Form signature based on topic + dimension or prompt text
+        const topicDimSig = `${rawTopic}::dim_${dimId}`;
+        const promptSig = cleanPrompt.length > 25 ? cleanPrompt.substring(0, 90) : topicDimSig;
+
+        if (seenSignatures.has(topicDimSig) || (cleanPrompt.length > 25 && seenSignatures.has(promptSig))) {
+          duplicateIndices.add(idx);
+          flaggedDuplicates.push({
+            index: idx,
+            card: card,
+            reason: seenSignatures.has(topicDimSig) ? `Duplicate dimension (${dimId}) for topic` : 'Identical question prompt'
+          });
+        } else {
+          seenSignatures.set(topicDimSig, idx);
+          if (cleanPrompt.length > 25) seenSignatures.set(promptSig, idx);
+        }
+      });
+
+      if (dupBadge) {
+        dupBadge.innerText = `${flaggedDuplicates.length} Redundant Cards Detected`;
+        dupBadge.className = flaggedDuplicates.length > 0
+          ? "px-3 py-1 rounded text-xs font-mono font-bold bg-amber-950 text-amber-300 border border-amber-800"
+          : "px-3 py-1 rounded text-xs font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-800";
+      }
+
+      if (dupList) {
+        if (flaggedDuplicates.length === 0) {
+          dupList.innerHTML = `<span class="text-emerald-400 italic">No duplicate or redundant cards detected. The deck is fully unique!</span>`;
+        } else {
+          dupList.innerHTML = flaggedDuplicates.map(dup => {
+            const title = dup.card.topic || dup.card.case_title || `Card ${dup.index + 1}`;
+            return `
+              <div class="flex items-center justify-between py-1 border-b border-slate-900 gap-2">
+                <span class="truncate text-slate-300">#${dup.index + 1}. ${escapeHtml(title)}</span>
+                <span class="text-amber-400 text-[10px] shrink-0 font-bold">[${escapeHtml(dup.reason)}]</span>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      if (purgeBtn) {
+        purgeBtn.disabled = false;
+        purgeBtn.innerText = flaggedDuplicates.length > 0 
+          ? `⚡ Purge ${flaggedDuplicates.length} Redundancies & Clean Deck`
+          : `✨ Sanitize & Clean Formatting (0 Duplicates)`;
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeDeckPolishModal() {
+      document.getElementById('deckPolishModal')?.classList.add('hidden');
+      activePolishDeckId = null;
+      flaggedDuplicates = [];
+    }
+
+    async function executeDeckDeduplication() {
+      if (!activePolishDeckId) return;
+      const deck = await dbGet('decks', activePolishDeckId);
+      if (!deck || !deck.cards) return;
+
+      const initialCount = deck.cards.length;
+      const seenSignatures = new Set();
+      const uniqueCleanedCards = [];
+
+      deck.cards.forEach((card) => {
+        // Sanitize card text and prompts during the polish pass
+        if (card.question_text) {
+          card.question_text = sanitizeQuestionPrompt(card.question_text);
+        }
+        if (card.question) {
+          card.question = sanitizeQuestionPrompt(card.question);
+        }
+
+        const rawTopic = (card.baseTopic || card.topic || card.case_title || '').trim().toLowerCase();
+        const dimId = card.dimensionId || card.forcedDimensionId || 'general';
+        const cleanPrompt = (card.question_text || card.question || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+
+        const topicDimSig = `${rawTopic}::dim_${dimId}`;
+        const promptSig = cleanPrompt.length > 25 ? cleanPrompt.substring(0, 90) : topicDimSig;
+
+        if (!seenSignatures.has(topicDimSig) && (!cleanPrompt.length || !seenSignatures.has(promptSig))) {
+          seenSignatures.add(topicDimSig);
+          if (cleanPrompt.length > 25) seenSignatures.add(promptSig);
+          uniqueCleanedCards.push(card);
+        }
+      });
+
+      const removedCount = initialCount - uniqueCleanedCards.length;
+      deck.cards = uniqueCleanedCards;
+
+      await dbSave('decks', deck);
+      await stampSubjectModifiedTimestamp();
+      await renderDeckListUI();
+
+      // If this polished deck is currently active in the recitation session, sync the changes live
+      if (state.activeDeckTitle === deck.title && state.isSessionActive) {
+        state.activeAgenda = [...uniqueCleanedCards];
+        state.activeDeckCardsPool = [...uniqueCleanedCards];
+        state.totalQuestions = uniqueCleanedCards.length;
+        document.getElementById('totalQNum').innerText = state.totalQuestions;
+        if (state.currentQuestionIndex > state.totalQuestions) {
+          state.currentQuestionIndex = state.totalQuestions;
+        }
+        await launchActiveCard(state.currentQuestionIndex);
+      }
+
+      closeDeckPolishModal();
+      alert(`✅ Deck Polish Complete!\n\nRemoved ${removedCount} redundant card(s).\nDeck now contains ${uniqueCleanedCards.length} high-yield unique cards.`);
+    }
+    function closeCardCreatorModal() {
+      document.getElementById('cardCreatorModal')?.classList.add('hidden');
+      document.getElementById('deleteCardFromStudioBtn')?.classList.add('hidden');
+      editingMergeCardContext = null;
+      activeEditingCardIndex = null;
+      activeEditingDeckId = null;
+    }
+
+    async function editActiveCardInPlace(fromEvalModal = false) {
+      if (!state.activeAgenda || state.activeAgenda.length === 0) {
+        alert("No active card currently selected to edit.");
+        return;
+      }
+
+      if (fromEvalModal) {
+        closeEvaluation();
+      }
+
+      const cardIdx = state.currentQuestionIndex - 1;
+      const card = state.activeAgenda[cardIdx];
+      if (!card) return;
+
+      activeEditingCardIndex = cardIdx;
+
+      // Show the Delete Card button in the editor footer
+      const deleteBtn = document.getElementById('deleteCardFromStudioBtn');
+      if (deleteBtn) deleteBtn.classList.remove('hidden');
+
+      const studioModal = document.getElementById('cardCreatorModal');
+      if (studioModal) studioModal.classList.remove('hidden');
+
+      const titleEl = document.getElementById('cardCreatorModalTitle');
+      if (titleEl) titleEl.innerText = `Edit Card (${state.currentQuestionIndex} of ${state.totalQuestions})`;
+
+      const topicInput = document.getElementById('customTopicInput');
+      const citationInput = document.getElementById('customCitationInput');
+      const questionInput = document.getElementById('customQuestionPromptInput');
+
+      if (topicInput) topicInput.value = card.topic || card.case_title || '';
+      if (citationInput) citationInput.value = card.citation || card.rule_citation || '';
+      if (questionInput) questionInput.value = sanitizeQuestionPrompt(card.question_text || card.question || state.currentQuestionText || '');
+
+      const dimId = card.dimensionId || card.forcedDimensionId || 1;
+
+      if (card.benchmark_fir || [5, 6, 7, 8].includes(dimId) || card.isCase) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CASE');
+        const fir = card.benchmark_fir || {};
+        if (document.getElementById('caseFactsInput')) document.getElementById('caseFactsInput').value = fir.facts || '';
+        if (document.getElementById('caseIssueInput')) document.getElementById('caseIssueInput').value = fir.issue || '';
+        if (document.getElementById('caseRulingInput')) document.getElementById('caseRulingInput').value = fir.ruling || '';
+        if (document.getElementById('caseRatioInput')) document.getElementById('caseRatioInput').value = fir.ratio_doctrine || fir.doctrine || '';
+      } else if (card.benchmark_codal_breakdown || [1, 2, 3].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('CODAL');
+        const b = card.benchmark_codal_breakdown || {};
+        if (document.getElementById('codalRuleInput')) document.getElementById('codalRuleInput').value = card.codal_provision_text || b.operative_rule_summary || '';
+        if (document.getElementById('codalRequisitesInput')) document.getElementById('codalRequisitesInput').value = b.elements_requisites || '';
+        if (document.getElementById('codalStatExceptionsInput')) document.getElementById('codalStatExceptionsInput').value = b.statutory_exceptions || '';
+        if (document.getElementById('codalJurisExceptionsInput')) document.getElementById('codalJurisExceptionsInput').value = b.jurisprudential_exceptions || '';
+      } else if (card.benchmark_alac || [4, 9, 10].includes(dimId)) {
+        if (typeof setCardArchetype === 'function') setCardArchetype('ALAC');
+        const alac = card.benchmark_alac || {};
+        if (document.getElementById('alacAInput')) document.getElementById('alacAInput').value = alac.p1_direct_answer || '';
+        if (document.getElementById('alacLInput')) document.getElementById('alacLInput').value = alac.p2_legal_basis || '';
+        if (document.getElementById('alacAppInput')) document.getElementById('alacAppInput').value = alac.p3_analysis || '';
+        if (document.getElementById('alacCInput')) document.getElementById('alacCInput').value = alac.p4_conclusion || '';
+      } else {
+        if (typeof setCardArchetype === 'function') setCardArchetype('SIMPLE');
+        if (document.getElementById('simpleAnswerInput')) document.getElementById('simpleAnswerInput').value = card.answer || card.model_answer || '';
+      }
+
+      const saveBtn = document.getElementById('saveAndCloseCardBtn');
+      if (saveBtn) saveBtn.innerText = "Update Card";
+      const addAnotherBtn = document.getElementById('saveAndAddAnotherBtn');
+      if (addAnotherBtn) addAnotherBtn.classList.add('hidden');
+    }
+
+    async function deleteActiveEditingCard() {
+      // 1. If deleting from the Merge Workspace
+      if (editingMergeCardContext) {
+        if (!confirm("Are you sure you want to remove this card from the source deck?")) return;
+        const { originDeckId, cardIdxInOrigin } = editingMergeCardContext;
+        const deck = await dbGet('decks', originDeckId);
+        if (deck && deck.cards) {
+          deck.cards.splice(cardIdxInOrigin, 1);
+          await dbSave('decks', deck);
+          await stampSubjectModifiedTimestamp();
+          activeMergeSourceDecks = await dbGetAll('decks');
+        }
+        closeCardCreatorModal();
+        const mergeModal = document.getElementById('deckMergeModal');
+        if (mergeModal) {
+          mergeModal.classList.remove('hidden');
+          if (typeof onMergeDeckSelectionChanged === 'function') onMergeDeckSelectionChanged();
+        }
+        return;
+      }
+
+      // 2. If deleting during an active recitation session
+      if (activeEditingCardIndex !== null && state.activeAgenda && state.activeAgenda[activeEditingCardIndex]) {
+        const cardToDelete = state.activeAgenda[activeEditingCardIndex];
+        const cardTitle = cardToDelete.topic || cardToDelete.case_title || `Card ${activeEditingCardIndex + 1}`;
+
+        if (!confirm(`Permanently delete "${cardTitle}" from the active deck/session?`)) {
+          return;
+        }
+
+        // Remove from active agenda and pools
+        state.activeAgenda.splice(activeEditingCardIndex, 1);
+        if (state.activeDeckCardsPool && state.activeDeckCardsPool.length > activeEditingCardIndex) {
+          state.activeDeckCardsPool.splice(activeEditingCardIndex, 1);
+        }
+
+        // If practicing from a saved deck, sync deletion to IndexedDB
+        if (state.activeDeckTitle) {
+          const decks = await dbGetAll('decks');
+          const targetDeck = decks.find(d => d.title === state.activeDeckTitle);
+          if (targetDeck && targetDeck.cards) {
+            targetDeck.cards = targetDeck.cards.filter(c => (c.topic || c.case_title) !== (cardToDelete.topic || cardToDelete.case_title));
+            await dbSave('decks', targetDeck);
+            await stampSubjectModifiedTimestamp();
+            await renderDeckListUI();
+          }
+        }
+
+        state.totalQuestions = state.activeAgenda.length;
+        document.getElementById('totalQNum').innerText = state.totalQuestions;
+
+        closeCardCreatorModal();
+
+        if (state.activeAgenda.length === 0) {
+          alert("All cards in this batch have been deleted.");
+          window.location.reload();
+          return;
+        }
+
+        // If the deleted card was the last card, adjust index
+        if (state.currentQuestionIndex > state.totalQuestions) {
+          state.currentQuestionIndex = state.totalQuestions;
+        }
+
+        await launchActiveCard(state.currentQuestionIndex);
+      }
     }
 
     async function openStudioToEditMergeCard(originDeckId, cardIdxInOrigin) {
